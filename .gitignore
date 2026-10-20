@@ -39,3 +39,6 @@ supabase/.temp
 /glow-slim-farma.svg
 # Fotos extraídas dos catálogos (imagens de fabricantes: não publicar no repositório)
 importacao/imagens/
+
+# Vercel CLI (ligação local do projeto)
+.vercel

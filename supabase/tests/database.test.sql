@@ -1,6 +1,8 @@
 -- Testes de regras de negócio e segurança. Execute com:  npx supabase test db
 begin;
 create extension if not exists pgtap with schema extensions;
+-- Em produção o pgTAP pode estar em outro esquema: procura nos dois.
+set local search_path to public, extensions;
 select plan(41);
 
 -- ---------------------------------------------------------------------------

@@ -1,0 +1,17 @@
+# Arquivos que a Vercel CLI (`vercel deploy`) NÃO deve enviar.
+# Sem isto, o .env.local (Supabase local, 127.0.0.1) entraria no build e o site
+# publicado tentaria falar com o computador de desenvolvimento.
+.env
+.env.*
+!.env.example
+.vercel
+node_modules
+dist
+supabase/.temp
+supabase/.branches
+# Materiais de referência e fotos de fabricantes
+*.pdf
+Captura de tela*
+Mockup*
+glow-slim-farma.svg
+importacao/imagens/
