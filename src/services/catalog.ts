@@ -23,7 +23,10 @@ export async function fetchCategories(): Promise<Category[]> {
   if (cats.error) throw cats.error
   if (used.error) throw used.error
   const withProducts = new Set(used.data.map((r) => r.category_id as string))
-  return (cats.data as Category[]).filter((c) => withProducts.has(c.id))
+  const all = cats.data as Category[]
+  // Um grupo aparece quando ele ou alguma subcategoria tem produto publicado.
+  const groupsWithProducts = new Set(all.filter((c) => c.parent_id && withProducts.has(c.id)).map((c) => c.parent_id!))
+  return all.filter((c) => withProducts.has(c.id) || groupsWithProducts.has(c.id))
 }
 
 export async function fetchBanners(placement: 'hero' | 'secondary'): Promise<Banner[]> {
@@ -41,7 +44,8 @@ export type CatalogSort = 'relevance' | 'name_asc' | 'name_desc' | 'price_asc' |
 
 export interface CatalogQuery {
   search?: string
-  categorySlug?: string
+  /** Slugs de categoria a incluir (um grupo inclui suas subcategorias). */
+  categorySlugs?: string[]
   sort?: CatalogSort
   flag?: 'is_featured' | 'is_bestseller' | 'is_offer'
   limit?: number
@@ -51,7 +55,7 @@ export async function fetchCatalog(q: CatalogQuery = {}): Promise<CatalogProduct
   let query = supabase.from('catalog_products').select('*')
   const term = q.search ? normalizeSearch(q.search) : ''
   if (term) query = query.like('search_text', `%${term}%`)
-  if (q.categorySlug) query = query.eq('category_slug', q.categorySlug)
+  if (q.categorySlugs?.length) query = query.in('category_slug', q.categorySlugs)
   if (q.flag) query = query.eq(q.flag, true)
 
   switch (q.sort) {

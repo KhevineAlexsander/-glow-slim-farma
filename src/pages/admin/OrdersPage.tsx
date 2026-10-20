@@ -48,7 +48,7 @@ export default function OrdersPage() {
       <AdminPageHeader title="Pedidos e orçamentos" />
       <div className="card mb-4 grid gap-3 p-4 sm:grid-cols-2">
         <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-500" />
           <input className="input pl-9" placeholder="Nome, telefone ou nº do pedido" value={searchText} onChange={(e) => setSearchText(e.target.value)} aria-label="Buscar pedidos" />
         </div>
         <select className="input" value={status} onChange={(e) => setParam('status', e.target.value)} aria-label="Status">
@@ -66,9 +66,9 @@ export default function OrdersPage() {
         <>
           <div className="space-y-2">
             {data.rows.map((o) => (
-              <Link key={o.id} to={`/admin/pedidos/${o.id}`} className="card flex flex-col gap-2 p-4 hover:ring-2 hover:ring-brand/20 sm:flex-row sm:items-center sm:gap-3">
+              <Link key={o.id} to={`/admin/pedidos/${o.id}`} className="card flex flex-col gap-2 p-4 hover:border-[#cbd5e1] sm:flex-row sm:items-center sm:gap-3">
                 <div className="min-w-0 sm:flex-1">
-                  <p className="font-bold text-slate-900">
+                  <p className="font-bold text-ink">
                     #{o.order_number} · {o.customer_name}
                   </p>
                   <p className="text-xs text-slate-500">

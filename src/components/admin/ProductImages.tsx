@@ -68,7 +68,7 @@ export function ProductImages({ productId }: { productId: string }) {
     <div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {images.map((img, i) => (
-          <div key={img.id} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div key={img.id} className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white">
             <img src={img.url} alt="" className="aspect-square w-full object-contain" />
             {i === 0 && <span className="absolute top-1 left-1 rounded bg-brand px-1.5 text-[10px] font-bold text-white">Principal</span>}
             <div className="flex justify-between border-t border-slate-100 bg-white">
@@ -88,7 +88,7 @@ export function ProductImages({ productId }: { productId: string }) {
           type="button"
           onClick={() => ref.current?.click()}
           disabled={busy}
-          className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-200 text-sm text-slate-500 hover:border-brand hover:text-brand"
+          className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-slate-200 text-sm text-slate-500 hover:border-brand hover:text-brand"
         >
           {busy ? <Spinner /> : <ImagePlus className="size-6" />}
           {busy ? 'Enviando…' : 'Adicionar'}

@@ -1,4 +1,4 @@
-import { Lock, UserRound } from 'lucide-react'
+import { Lock } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 import { ErrorBox, PageLoader } from '../../components/ui/misc'
@@ -79,17 +79,14 @@ export default function SignInPage() {
   const title = { entrar: 'Entrar na sua conta', criar: 'Criar conta', recuperar: 'Recuperar senha' }[mode]
 
   return (
-    <div className="mx-auto max-w-md px-4 py-8">
-      <div className="card p-5 sm:p-6">
+    <div className="mx-auto max-w-md px-(--margin) py-12">
+      <div>
         <div className="mb-5 flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-full bg-brand-light text-brand">
-            <UserRound className="size-6" />
-          </span>
-          <h1 className="text-xl font-extrabold text-brand-dark">{title}</h1>
+          <h1 className="text-2xl font-semibold text-ink">{title}</h1>
         </div>
 
         {mode !== 'recuperar' && (
-          <div className="mb-5 grid grid-cols-2 rounded-full bg-slate-100 p-1" role="tablist">
+          <div className="mb-5 grid grid-cols-2 rounded-full bg-[#f1f5f9] p-1" role="tablist">
             {(['entrar', 'criar'] as const).map((m) => (
               <button
                 key={m}
@@ -97,7 +94,7 @@ export default function SignInPage() {
                 role="tab"
                 aria-selected={mode === m}
                 onClick={() => switchMode(m)}
-                className={`min-h-10 rounded-full text-sm font-semibold ${mode === m ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-500'}`}
+                className={`min-h-10 rounded-full text-sm font-semibold ${mode === m ? 'bg-white text-ink' : 'text-muted'}`}
               >
                 {m === 'entrar' ? 'Entrar' : 'Criar conta'}
               </button>
@@ -135,18 +132,18 @@ export default function SignInPage() {
                 value={form.password}
                 onChange={(e) => set('password', e.target.value)}
               />
-              {mode === 'criar' && <p className="mt-1 text-xs text-slate-500">Mínimo de 8 caracteres, com letras e números.</p>}
+              {mode === 'criar' && <p className="mt-1 text-xs text-muted">Mínimo de 8 caracteres, com letras e números.</p>}
             </div>
           )}
           {mode === 'criar' && (
-            <label className="flex min-h-11 items-center gap-3 py-1 text-xs text-slate-600">
-              <input type="checkbox" className="size-5 shrink-0 accent-[var(--brand)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+            <label className="flex min-h-11 items-center gap-3 py-1 text-xs text-muted">
+              <input type="checkbox" className="size-5 shrink-0 accent-[var(--ink)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
               Concordo que meus dados sejam usados para atendimento e acompanhamento dos meus pedidos.
             </label>
           )}
 
           {error && <ErrorBox message={error} />}
-          {info && <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{info}</p>}
+          {info && <p className="bg-[#dcfae5] p-3 text-sm text-[#04250e]">{info}</p>}
 
           <button className="btn-primary w-full" disabled={busy}>
             {busy ? 'Aguarde…' : mode === 'entrar' ? 'Entrar' : mode === 'criar' ? 'Criar conta' : 'Enviar link'}
@@ -155,24 +152,24 @@ export default function SignInPage() {
 
         <div className="mt-4 flex flex-col items-center gap-1 text-sm">
           {mode === 'entrar' && (
-            <button type="button" className="min-h-11 font-semibold text-brand" onClick={() => switchMode('recuperar')}>
+            <button type="button" className="min-h-11 font-medium text-ink underline" onClick={() => switchMode('recuperar')}>
               Esqueci minha senha
             </button>
           )}
           {mode === 'recuperar' && (
-            <button type="button" className="min-h-11 font-semibold text-brand" onClick={() => switchMode('entrar')}>
+            <button type="button" className="min-h-11 font-medium text-ink underline" onClick={() => switchMode('entrar')}>
               Voltar para o login
             </button>
           )}
         </div>
-        <p className="mt-2 text-center text-xs text-slate-500">
+        <p className="mt-2 text-center text-xs text-muted">
           Não é obrigatório ter conta para pedir: você também pode enviar seu pedido sem cadastro.
         </p>
       </div>
 
       <Link
         to="/admin/login"
-        className="mt-6 flex min-h-11 items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand"
+        className="mt-6 flex min-h-11 items-center justify-center gap-2 text-sm font-semibold text-muted hover:text-ink"
       >
         <Lock className="size-4" /> Acesso da equipe (painel administrativo)
       </Link>

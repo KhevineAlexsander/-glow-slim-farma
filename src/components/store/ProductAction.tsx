@@ -6,6 +6,9 @@ import { productInquiryMessage, whatsappLink } from '../../lib/whatsapp'
 import type { CatalogProduct } from '../../types'
 import { useToast } from '../ui/Toast'
 
+/** Versão do card: botão de contorno com rótulo curto (o rótulo completo vai no aria-label). */
+const COMPACT = 'btn w-full border border-[#cbd5e1] bg-white px-3 text-ink hover:border-ink'
+
 /** Botão principal do produto — só aparece quando a ação é realmente possível. */
 export function ProductAction({
   product,
@@ -25,7 +28,7 @@ export function ProductAction({
     return (
       <button
         type="button"
-        className={compact ? 'btn-primary size-11 shrink-0 px-0' : 'btn-primary w-full'}
+        className={compact ? COMPACT : 'btn-primary w-full'}
         onClick={() => {
           add(product.id, quantity)
           toast(d.action === 'add_to_quote' ? 'Adicionado ao orçamento.' : 'Adicionado ao carrinho.')
@@ -33,8 +36,8 @@ export function ProductAction({
         aria-label={d.actionLabel}
         title={d.actionLabel}
       >
-        <ShoppingCart className="size-5" />
-        {!compact && d.actionLabel}
+        <ShoppingCart className="size-5" aria-hidden="true" />
+        {compact ? 'Adicionar' : d.actionLabel}
       </button>
     )
   }
@@ -45,19 +48,20 @@ export function ProductAction({
         href={whatsappLink(s.whatsapp_number, productInquiryMessage(s.store_name, product.name, product.sku))}
         target="_blank"
         rel="noopener noreferrer"
-        className={compact ? 'btn-whatsapp size-11 shrink-0 px-0' : 'btn-whatsapp w-full'}
+        className={compact ? COMPACT : 'btn-whatsapp w-full'}
         aria-label={d.actionLabel}
         title={d.actionLabel}
       >
-        <MessageCircle className="size-5" />
-        {!compact && d.actionLabel}
+        <MessageCircle className={`size-5 ${compact ? 'text-[#0b7a3b]' : ''}`} aria-hidden="true" />
+        {compact ? 'Consultar' : d.actionLabel}
       </a>
     )
   }
 
-  if (d.action === 'unavailable' && !compact) {
+  if (d.action === 'unavailable') {
+    if (compact) return <p className="flex min-h-11 items-center text-sm text-muted">Indisponível</p>
     return (
-      <button type="button" className="btn w-full bg-slate-100 text-slate-500" disabled>
+      <button type="button" className="btn w-full bg-slate-100 text-slate-600" disabled>
         Indisponível
       </button>
     )

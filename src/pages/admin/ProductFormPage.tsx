@@ -1,4 +1,5 @@
 import { Archive, ChevronLeft, ExternalLink, ShieldAlert, Trash2 } from 'lucide-react'
+import { CategoryOptions } from '../../components/admin/CategoryOptions'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ProductImages } from '../../components/admin/ProductImages'
@@ -53,7 +54,7 @@ const EMPTY: FormState = {
 function Section({ title, children, description }: { title: string; description?: string; children: ReactNode }) {
   return (
     <section className="card p-4 sm:p-5">
-      <h2 className="font-bold text-slate-900">{title}</h2>
+      <h2 className="font-bold text-ink">{title}</h2>
       {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
       <div className="mt-4 space-y-4">{children}</div>
     </section>
@@ -177,10 +178,10 @@ export default function ProductFormPage() {
           </Link>
         )}
       </div>
-      <h1 className="text-2xl font-extrabold text-slate-900">{isNew ? 'Novo produto' : form.name || 'Editar produto'}</h1>
+      <h1 className="text-2xl font-semibold text-ink">{isNew ? 'Novo produto' : form.name || 'Editar produto'}</h1>
 
       {form.needs_review && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <strong>Este produto foi marcado para revisão.</strong>
           {form.review_notes && <p className="mt-1 whitespace-pre-line">{form.review_notes}</p>}
         </div>
@@ -225,9 +226,7 @@ export default function ProductFormPage() {
             <label className="label" htmlFor="category">Categoria</label>
             <select id="category" className="input" value={form.category_id ?? ''} onChange={(e) => set('category_id', e.target.value || null)}>
               <option value="">Sem categoria</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              <CategoryOptions categories={categories} />
             </select>
           </div>
           <div>
@@ -360,7 +359,7 @@ export default function ProductFormPage() {
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-100 bg-white/95 p-3 backdrop-blur lg:left-64">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#e8e8e8] bg-white p-3 lg:right-[9px] lg:bottom-[9px] lg:left-[241px] lg:rounded-b-2xl">
         <div className="mx-auto flex max-w-4xl items-center gap-3">
           {error && <p className="flex-1 text-sm text-red-600">{error}</p>}
           <button type="submit" className="btn-primary ml-auto min-w-40" disabled={saving}>

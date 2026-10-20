@@ -2,10 +2,13 @@ import { AlertTriangle, CheckCircle2, MessageCircle, Minus, Plus, ShieldAlert, T
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { ProductImage } from '../../components/store/ProductCard'
-import { EmptyState, ErrorBox, PageLoader } from '../../components/ui/misc'
+import { groupColors } from '../../components/store/VialArt'
+import { ErrorBox, PageLoader } from '../../components/ui/misc'
 import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
+import { useCategories } from '../../contexts/CategoriesContext'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
+import { buildCategoryTree } from '../../lib/categoryTree'
 import { formatBRL } from '../../lib/money'
 import { effectivePriceCents, isRestricted, productDisplay } from '../../lib/pricing'
 import { friendlyError } from '../../lib/supabase'
@@ -15,6 +18,7 @@ import type { CatalogProduct, PlacedOrder } from '../../types'
 
 export default function CartPage() {
   const s = useLoadedSettings()
+  const categories = useCategories()
   const { lines, setQuantity, remove, clear } = useCart()
   const { session, profile } = useAuth()
   const [products, setProducts] = useState<Map<string, CatalogProduct> | null>(null)
@@ -36,6 +40,7 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null)
   const [placed, setPlaced] = useState<{ order: PlacedOrder; name: string } | null>(null)
   const isQuote = s.sales_mode === 'quote'
+  const title = isQuote ? 'Solicitar orçamento' : 'Carrinho'
   const finishOnWhatsApp = s.send_to_whatsapp && Boolean(s.whatsapp_number)
   const idsKey = lines.map((l) => l.productId).sort().join(',')
 
@@ -61,48 +66,50 @@ export default function CartPage() {
     const { order, name } = placed
     const waText = orderMessage(s.store_name, order, name)
     return (
-      <div className="mx-auto max-w-xl px-4 py-10 text-center">
-        <CheckCircle2 className="mx-auto size-16 text-emerald-500" />
-        <h1 className="mt-4 text-2xl font-extrabold text-slate-900">
-          {order.kind === 'order' ? 'Pedido registrado!' : 'Solicitação de orçamento registrada!'}
+      <div className="mx-auto max-w-2xl px-(--margin) py-12">
+        <CheckCircle2 className="size-10 text-[#247b50]" aria-hidden="true" />
+        <h1 className="mt-4 text-2xl font-semibold text-ink">
+          {order.kind === 'order' ? 'Pedido registrado' : 'Solicitação de orçamento registrada'}
         </h1>
-        <p className="mt-2 text-slate-600">
-          Número: <strong className="text-brand-dark">#{order.order_number}</strong>
+        <p className="mt-1 text-muted">
+          Número <strong className="tabular font-semibold text-ink">#{order.order_number}</strong>
         </p>
         {finishOnWhatsApp && (
-          <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
+          <p className="mt-6 bg-[#dcfae5] p-4 text-sm text-[#04250e]">
             Abrimos o WhatsApp da loja com o resumo do seu pedido. <strong>Envie a mensagem</strong> para finalizar o
             atendimento.
           </p>
         )}
-        <p className="mt-4 text-sm text-slate-600">
+        <p className="mt-4 text-sm text-muted">
           {order.kind === 'order'
             ? 'Seu pedido foi recebido e aguarda confirmação da loja. Nenhum pagamento foi realizado — a loja entrará em contato para combinar pagamento e entrega.'
             : 'Recebemos sua solicitação. A loja vai responder com os valores e a disponibilidade.'}
         </p>
         {order.requires_document_review && (
-          <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+          <p className="mt-4 bg-[#fffbeb] p-4 text-sm text-[#92400e]">
             Alguns itens exigem prescrição/avaliação. Tenha a receita ou documentação em mãos para enviar à loja.
           </p>
         )}
-        {s.send_to_whatsapp && s.whatsapp_number && (
-          <a
-            href={whatsappLink(s.whatsapp_number, waText)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-whatsapp mt-6 w-full"
-          >
-            <MessageCircle className="size-5" /> Abrir o WhatsApp novamente
-          </a>
-        )}
-        {session && (
-          <Link to="/minha-conta" className="btn-outline mt-3 w-full">
-            Acompanhar em Minha conta
+        <div className="mt-8 grid gap-3 sm:grid-cols-2">
+          {s.send_to_whatsapp && s.whatsapp_number && (
+            <a
+              href={whatsappLink(s.whatsapp_number, waText)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-whatsapp sm:col-span-2"
+            >
+              <MessageCircle className="size-5" aria-hidden="true" /> Abrir o WhatsApp novamente
+            </a>
+          )}
+          {session && (
+            <Link to="/minha-conta" className="btn-outline">
+              Acompanhar em Minha conta
+            </Link>
+          )}
+          <Link to="/produtos" className={`btn-outline ${session ? '' : 'sm:col-span-2'}`}>
+            Continuar navegando
           </Link>
-        )}
-        <Link to="/produtos" className="btn-outline mt-3 w-full">
-          Continuar navegando
-        </Link>
+        </div>
       </div>
     )
   }
@@ -114,15 +121,42 @@ export default function CartPage() {
   const hasRestricted = validItems.some((v) => v.product && isRestricted(v.product))
   const hasUnpriced = validItems.some((v) => v.unit == null)
   const subtotal = validItems.reduce((sum, v) => sum + (v.unit ?? 0) * v.line.quantity, 0)
+  const itemCount = validItems.reduce((n, v) => n + v.line.quantity, 0)
 
   if (!lines.length) {
+    // Vazio: mantém o título e oferece os grupos como próximo passo
+    const groups = buildCategoryTree(categories)
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <EmptyState title={isQuote ? 'Sua lista de orçamento está vazia.' : 'Seu carrinho está vazio.'}>
-          <Link to="/produtos" className="font-semibold text-brand">
-            Ver produtos
-          </Link>
-        </EmptyState>
+      <div className="wrap py-8">
+        <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+        <p className="mt-1 text-sm text-muted">
+          {isQuote ? 'Sua lista de orçamento está vazia.' : 'Seu carrinho está vazio.'}
+        </p>
+        {groups.length > 0 && (
+          <nav className="mt-8" aria-label="Grupos de produtos">
+            <h2 className="text-base font-medium text-ink">Comece por um grupo</h2>
+            <ul className="mt-3 grid border-t border-[#e8e8e8] sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-3">
+              {groups.map(({ group }, index) => (
+                <li key={group.id} className="border-b border-[#e8e8e8]">
+                  <Link
+                    to={`/produtos?categoria=${group.slug}`}
+                    className="flex min-h-14 items-center gap-3 text-ink hover:underline"
+                  >
+                    <span
+                      className="size-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: groupColors(index)[0] }}
+                      aria-hidden="true"
+                    />
+                    {group.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+        <Link to="/produtos" className="btn-primary mt-8">
+          Ver produtos
+        </Link>
       </div>
     )
   }
@@ -163,14 +197,18 @@ export default function CartPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <h1 className="text-2xl font-extrabold text-brand-dark">{isQuote ? 'Solicitar orçamento' : 'Carrinho'}</h1>
+    <div className="wrap py-8">
+      <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+      <p className="mt-1 text-sm text-muted">
+        {itemCount} {itemCount === 1 ? 'item' : 'itens'}
+        {hasRestricted ? ' · alguns exigem prescrição/avaliação' : ''}
+      </p>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="space-y-3">
+      <div className="mt-6 grid items-start gap-8 lg:grid-cols-[1fr_400px]">
+        <div>
           {invalidItems.length > 0 && (
-            <div className="flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-              <AlertTriangle className="mt-0.5 size-5 shrink-0" />
+            <div className="mb-4 flex gap-2 bg-[#fffbeb] p-3 text-sm text-[#92400e]">
+              <AlertTriangle className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
               <div>
                 Alguns itens não podem mais ser incluídos (indisponíveis, sem preço ou com venda restrita) e não serão
                 enviados.
@@ -184,107 +222,126 @@ export default function CartPage() {
             </div>
           )}
 
-          {view.map(({ line, product, valid, unit }) => (
-            <div key={line.productId} className={`card flex gap-3 p-3 ${valid ? '' : 'opacity-60'}`}>
-              {product ? (
-                <Link to={`/produto/${product.slug}`} className="shrink-0">
-                  <ProductImage product={product} className="size-20 rounded-xl" />
-                </Link>
-              ) : (
-                <div className="size-20 shrink-0 rounded-xl bg-slate-100" />
-              )}
-              <div className="flex min-w-0 flex-1 flex-col">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="line-clamp-2 text-sm font-bold text-slate-800">
-                    {product?.name ?? 'Produto indisponível'}
-                  </p>
-                  <button
-                    onClick={() => remove(line.productId)}
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
-                    aria-label="Remover item"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
-                </div>
-                {product && isRestricted(product) && (
-                  <p className="flex items-center gap-1 text-xs font-semibold text-amber-700">
-                    <ShieldAlert className="size-3.5" /> Exige prescrição/avaliação
-                  </p>
+          {/* Itens: linhas finas, valor de cada linha alinhado à direita */}
+          <ul className="border-t border-[#e8e8e8]">
+            {view.map(({ line, product, valid, unit }) => (
+              <li key={line.productId} className="flex gap-4 border-b border-[#e8e8e8] py-4">
+                {product ? (
+                  <Link to={`/produto/${product.slug}`} className="shrink-0" tabIndex={-1} aria-hidden="true">
+                    <ProductImage product={product} className="size-20 sm:size-24" />
+                  </Link>
+                ) : (
+                  <div className="size-20 shrink-0 bg-slate-100 sm:size-24" />
                 )}
-                <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-                  {valid ? (
-                    <div className="flex h-9 items-center rounded-full border border-slate-200">
-                      <button
-                        className="flex size-9 items-center justify-center"
-                        onClick={() =>
-                          line.quantity <= 1 ? remove(line.productId) : setQuantity(line.productId, line.quantity - 1)
-                        }
-                        aria-label="Diminuir"
-                      >
-                        <Minus className="size-4" />
-                      </button>
-                      <span className="w-8 text-center text-sm font-semibold">{line.quantity}</span>
-                      <button
-                        className="flex size-9 items-center justify-center"
-                        onClick={() => setQuantity(line.productId, line.quantity + 1)}
-                        aria-label="Aumentar"
-                      >
-                        <Plus className="size-4" />
-                      </button>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      {product ? (
+                        <Link
+                          to={`/produto/${product.slug}`}
+                          className="line-clamp-2 text-sm font-medium text-ink hover:underline"
+                        >
+                          {product.name}
+                        </Link>
+                      ) : (
+                        <p className="text-sm font-medium text-muted">Produto indisponível</p>
+                      )}
+                      {product && isRestricted(product) && (
+                        <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-800">
+                          <ShieldAlert className="size-3.5" aria-hidden="true" /> Exige prescrição/avaliação
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <span className="text-xs text-slate-500">Não será enviado</span>
-                  )}
-                  <p className="text-right text-sm font-bold text-brand-dark">
-                    {unit != null ? formatBRL(unit * line.quantity) : <span className="text-xs text-brand">A consultar</span>}
-                  </p>
+                    <p className="tabular shrink-0 text-right text-sm font-semibold text-ink">
+                      {unit != null ? (
+                        formatBRL(unit * line.quantity)
+                      ) : (
+                        <span className="font-normal text-muted">A consultar</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+                    {valid ? (
+                      <div className="flex h-11 items-center border border-[#cbd5e1]">
+                        <button
+                          className="flex size-11 items-center justify-center text-ink hover:bg-[#f1f5f9]"
+                          onClick={() =>
+                            line.quantity <= 1 ? remove(line.productId) : setQuantity(line.productId, line.quantity - 1)
+                          }
+                          aria-label="Diminuir"
+                        >
+                          <Minus className="size-4" />
+                        </button>
+                        <span className="tabular w-8 text-center text-sm font-medium text-ink">{line.quantity}</span>
+                        <button
+                          className="flex size-11 items-center justify-center text-ink hover:bg-[#f1f5f9]"
+                          onClick={() => setQuantity(line.productId, line.quantity + 1)}
+                          aria-label="Aumentar"
+                        >
+                          <Plus className="size-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted">Não será enviado</span>
+                    )}
+                    <button
+                      onClick={() => remove(line.productId)}
+                      className="inline-flex min-h-11 items-center gap-1.5 px-2 text-sm text-muted hover:text-red-700"
+                      aria-label={`Remover ${product?.name ?? 'item'}`}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" /> Remover
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <form onSubmit={submit} className="card h-fit space-y-4 p-5 lg:sticky lg:top-28">
-          <div className="rounded-xl bg-brand-light/60 p-3 text-sm">
-            <div className="flex justify-between font-semibold text-slate-700">
+        <form onSubmit={submit} className="card space-y-4 p-5 lg:sticky lg:top-28">
+          <div className="border-b border-[#dde3ea] pb-4">
+            <div className="flex items-baseline justify-between gap-3 text-sm text-ink">
               <span>{hasUnpriced ? 'Subtotal (itens com preço)' : 'Total estimado'}</span>
-              <span>{subtotal > 0 ? formatBRL(subtotal) : '—'}</span>
+              <span className="tabular text-base font-semibold">
+                {subtotal > 0 ? formatBRL(subtotal) : <span className="text-muted">—</span>}
+              </span>
             </div>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-muted">
               {isQuote
                 ? 'Os valores finais serão confirmados pela loja na resposta ao orçamento.'
                 : 'O valor é recalculado e confirmado pela loja. Frete e pagamento são combinados no atendimento.'}
             </p>
           </div>
 
+          <h2 className="text-base font-medium text-ink">Seus dados</h2>
           <div>
             <label className="label" htmlFor="name">Nome *</label>
-            <input id="name" className="input" required maxLength={120} autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input id="name" className="input bg-white" required maxLength={120} autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
             <label className="label" htmlFor="phone">WhatsApp / telefone com DDD *</label>
-            <input id="phone" className="input" required inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <input id="phone" className="input bg-white" required inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           </div>
           <div>
             <label className="label" htmlFor="email">E-mail</label>
-            <input id="email" type="email" className="input" maxLength={120} autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <input id="email" type="email" className="input bg-white" maxLength={120} autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </div>
           <div>
             <label className="label" htmlFor="city">Cidade</label>
-            <input id="city" className="input" maxLength={120} autoComplete="address-level2" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            <input id="city" className="input bg-white" maxLength={120} autoComplete="address-level2" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
           </div>
           <div>
             <label className="label" htmlFor="notes">Observações</label>
-            <textarea id="notes" className="input min-h-20 py-2" maxLength={1000} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+            <textarea id="notes" className="input min-h-20 bg-white py-2" maxLength={1000} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
 
-          <label className="flex min-h-11 items-center gap-3 py-1 text-xs text-slate-600">
-            <input type="checkbox" className="size-5 shrink-0 accent-[var(--brand)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+          <label className="flex min-h-11 items-center gap-3 py-1 text-xs text-muted">
+            <input type="checkbox" className="size-5 shrink-0 accent-[var(--ink)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             Concordo que meus dados sejam usados somente para o atendimento desta solicitação.
           </label>
           {hasRestricted && (
             <label className="flex min-h-11 items-center gap-3 py-1 text-xs text-amber-900">
-              <input type="checkbox" className="size-5 shrink-0 accent-[var(--brand)]" checked={rxAware} onChange={(e) => setRxAware(e.target.checked)} />
+              <input type="checkbox" className="size-5 shrink-0 accent-[var(--ink)]" checked={rxAware} onChange={(e) => setRxAware(e.target.checked)} />
               Estou ciente de que itens com prescrição/venda restrita só serão fornecidos após apresentação de receita ou
               documentação e avaliação do responsável técnico.
             </label>
@@ -292,11 +349,11 @@ export default function CartPage() {
 
           {error && <ErrorBox message={error} />}
           {session ? (
-            <p className="text-xs text-slate-500">Este pedido ficará salvo em Minha conta.</p>
+            <p className="text-xs text-muted">Este pedido ficará salvo em Minha conta.</p>
           ) : (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted">
               Tem conta?{' '}
-              <Link to="/entrar?voltar=/carrinho" className="font-semibold text-brand">
+              <Link to="/entrar?voltar=/carrinho" className="font-medium text-ink underline">
                 Entre para acompanhar seus pedidos
               </Link>{' '}
               (opcional).
@@ -307,7 +364,7 @@ export default function CartPage() {
             className={finishOnWhatsApp ? 'btn-whatsapp w-full' : 'btn-primary w-full'}
             disabled={submitting || !validItems.length}
           >
-            {finishOnWhatsApp && !submitting && <MessageCircle className="size-5" />}
+            {finishOnWhatsApp && !submitting && <MessageCircle className="size-5" aria-hidden="true" />}
             {submitting
               ? 'Enviando…'
               : finishOnWhatsApp

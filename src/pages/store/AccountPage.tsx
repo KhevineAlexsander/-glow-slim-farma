@@ -47,9 +47,9 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
+    <div className="mx-auto max-w-5xl px-(--margin) py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold text-brand-dark">
+        <h1 className="text-2xl font-semibold text-ink">
           Olá{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}!
         </h1>
         <div className="flex flex-wrap gap-2">
@@ -66,43 +66,43 @@ export default function AccountPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
         <section>
-          <h2 className="mb-3 font-bold text-slate-900">Meus pedidos e orçamentos</h2>
+          <h2 className="mb-3 font-medium text-ink">Meus pedidos e orçamentos</h2>
           {ordersError ? (
             <ErrorBox message={ordersError} />
           ) : orders === null ? (
             <div className="flex justify-center py-8"><Spinner className="size-7" /></div>
           ) : orders.length === 0 ? (
             <EmptyState title="Você ainda não fez pedidos com esta conta.">
-              <Link to="/produtos" className="font-semibold text-brand">Ver produtos</Link>
+              <Link to="/produtos" className="font-medium text-ink underline">Ver produtos</Link>
             </EmptyState>
           ) : (
             <div className="space-y-3">
               {orders.map((o) => (
                 <article key={o.id} className="card p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-bold text-slate-900">
+                    <p className="font-medium text-ink">
                       {o.kind === 'order' ? 'Pedido' : 'Orçamento'} #{o.order_number}
                     </p>
                     <Badge tone={ORDER_STATUS[o.status].tone}>{ORDER_STATUS[o.status].label}</Badge>
                   </div>
-                  <p className="text-xs text-slate-500">{formatDateTime(o.created_at)}</p>
-                  <ul className="mt-2 space-y-0.5 text-sm text-slate-700">
+                  <p className="text-xs text-muted">{formatDateTime(o.created_at)}</p>
+                  <ul className="mt-2 space-y-0.5 text-sm text-ink">
                     {o.order_items.map((i, idx) => (
                       <li key={idx} className="flex justify-between gap-3">
                         <span className="min-w-0">{i.quantity}x {i.product_name}</span>
-                        <span className="shrink-0 text-slate-500">
+                        <span className="tabular shrink-0 text-muted">
                           {i.unit_price_cents != null ? formatBRL(i.unit_price_cents * i.quantity) : 'a consultar'}
                         </span>
                       </li>
                     ))}
                   </ul>
                   {o.requires_document_review && (
-                    <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-amber-700">
+                    <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-amber-800">
                       <ShieldAlert className="size-3.5" /> Contém itens que exigem prescrição/avaliação.
                     </p>
                   )}
                   {o.total_cents > 0 && (
-                    <p className="mt-2 text-right text-sm font-bold text-brand-dark">
+                    <p className="mt-2 text-right tabular text-sm font-semibold text-ink">
                       {o.has_unpriced_items ? 'Subtotal' : 'Total'}: {formatBRL(o.total_cents)}
                     </p>
                   )}
@@ -113,10 +113,10 @@ export default function AccountPage() {
         </section>
 
         <form onSubmit={save} className="card h-fit space-y-4 p-5">
-          <h2 className="font-bold text-slate-900">Meus dados</h2>
+          <h2 className="font-medium text-ink">Meus dados</h2>
           <div>
             <span className="label">E-mail</span>
-            <p className="text-sm break-all text-slate-600">{session.user.email}</p>
+            <p className="text-sm break-all text-muted">{session.user.email}</p>
           </div>
           <div>
             <label className="label" htmlFor="acc-name">Nome</label>
@@ -128,7 +128,7 @@ export default function AccountPage() {
           </div>
           {formError && <ErrorBox message={formError} />}
           <button className="btn-primary w-full" disabled={saving}>{saving ? 'Salvando…' : 'Salvar dados'}</button>
-          <p className="text-xs text-slate-500">Seus dados são usados para preencher pedidos e para a loja falar com você.</p>
+          <p className="text-xs text-muted">Seus dados são usados para preencher pedidos e para a loja falar com você.</p>
         </form>
       </div>
     </div>

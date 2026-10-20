@@ -239,7 +239,7 @@ export default function ImportPage() {
             {result.categoriesCreated > 0 && <li>{result.categoriesCreated} categoria(s) criada(s)</li>}
           </ul>
           {result.failed.length > 0 && (
-            <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
               {result.failed.map((f) => (
                 <p key={f.line}>Linha {f.line}: {f.message}</p>
               ))}
@@ -287,11 +287,11 @@ export default function ImportPage() {
               return (
                 <div key={r.line} className="card space-y-1 p-3 text-sm">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-slate-400">Linha {r.line}</span>
+                    <span className="text-xs text-slate-500">Linha {r.line}</span>
                     <Badge tone={st.tone}>{st.label}</Badge>
                   </div>
                   <p className="font-medium">
-                    {r.data.name || <span className="text-slate-400">—</span>}
+                    {r.data.name || <span className="text-slate-500">—</span>}
                     {(r.data.requires_prescription || r.data.restricted_sale) && (
                       <span className="ml-1 text-xs font-semibold text-amber-700">(restrito)</span>
                     )}
@@ -329,10 +329,10 @@ export default function ImportPage() {
                   const st = rowStatus(r)
                   return (
                     <tr key={r.line} className="align-top">
-                      <td className="px-3 py-2 text-slate-400">{r.line}</td>
+                      <td className="px-3 py-2 text-slate-500">{r.line}</td>
                       <td className="px-3 py-2"><Badge tone={st.tone}>{st.label}</Badge></td>
                       <td className="px-3 py-2 font-medium">
-                        {r.data.name || <span className="text-slate-400">—</span>}
+                        {r.data.name || <span className="text-slate-500">—</span>}
                         {(r.data.requires_prescription || r.data.restricted_sale) && (
                           <span className="ml-1 text-xs font-semibold text-amber-700">(restrito)</span>
                         )}

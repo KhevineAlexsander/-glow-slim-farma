@@ -51,7 +51,7 @@ export default function OrderDetailPage() {
         <ChevronLeft className="size-4" /> Pedidos
       </Link>
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-extrabold text-slate-900">
+        <h1 className="text-2xl font-semibold text-ink">
           {order.kind === 'order' ? 'Pedido' : 'Orçamento'} #{order.order_number}
         </h1>
         <Badge tone={ORDER_STATUS[order.status].tone}>{ORDER_STATUS[order.status].label}</Badge>
@@ -106,7 +106,7 @@ export default function OrderDetailPage() {
           </select>
         </div>
         {order.requires_document_review && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
             <Toggle
               checked={order.documents_verified}
               disabled={saving}

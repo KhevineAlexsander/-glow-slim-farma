@@ -15,15 +15,19 @@ export function PageLoader() {
 
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-12 text-center">
-      <p className="font-semibold text-slate-700">{title}</p>
-      {children && <div className="mt-2 text-sm text-slate-500">{children}</div>}
+    <div className="border border-dashed border-[#cbd5e1] px-6 py-10 text-center">
+      <p className="font-medium text-ink">{title}</p>
+      {children && <div className="mt-2 text-sm text-muted">{children}</div>}
     </div>
   )
 }
 
 export function ErrorBox({ message }: { message: string }) {
-  return <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{message}</div>
+  return (
+    <div role="alert" className="bg-[#ffedea] px-4 py-3 text-sm text-[#831c1e]">
+      {message}
+    </div>
+  )
 }
 
 export function Toggle({
@@ -48,7 +52,7 @@ export function Toggle({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors before:absolute before:-inset-2.5 before:content-[''] ${
-          checked ? 'bg-brand' : 'bg-slate-300'
+          checked ? 'bg-ink' : 'bg-slate-300'
         }`}
       >
         <span
@@ -58,8 +62,8 @@ export function Toggle({
         />
       </button>
       <span>
-        <span className="block text-sm font-medium text-slate-800">{label}</span>
-        {description && <span className="block text-xs text-slate-500">{description}</span>}
+        <span className="block text-sm font-medium text-ink">{label}</span>
+        {description && <span className="block text-xs text-muted">{description}</span>}
       </span>
     </label>
   )
@@ -79,8 +83,8 @@ export function Pagination({
   const pages = Math.max(1, Math.ceil(total / pageSize))
   if (total === 0) return null
   return (
-    <div className="flex items-center justify-between gap-2 text-sm text-slate-600">
-      <span>
+    <div className="flex items-center justify-between gap-2 text-sm text-muted">
+      <span className="tabular">
         {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}
       </span>
       <div className="flex items-center gap-1">
@@ -106,13 +110,13 @@ export function Pagination({
 export function Badge({ children, tone = 'slate' }: { children: ReactNode; tone?: 'slate' | 'green' | 'amber' | 'red' | 'blue' }) {
   const tones = {
     slate: 'bg-slate-100 text-slate-700',
-    green: 'bg-emerald-50 text-emerald-700',
-    amber: 'bg-amber-50 text-amber-800',
-    red: 'bg-red-50 text-red-700',
+    green: 'bg-[#dcfae5] text-[#04250e]',
+    amber: 'bg-[#fffbeb] text-[#92400e]',
+    red: 'bg-[#ffedea] text-[#831c1e]',
     blue: 'bg-brand-light text-brand-dark',
   }
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${tones[tone]}`}>
+    <span className={`inline-flex flex-none items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${tones[tone]}`}>
       {children}
     </span>
   )

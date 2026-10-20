@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Em produção o pgTAP pode estar em outro esquema: procura nos dois.
 set local search_path to public, extensions;
-select plan(54);
+select plan(57);
 
 -- ---------------------------------------------------------------------------
 -- Dados de teste (como postgres, ignorando RLS)
@@ -51,6 +51,16 @@ update public.products set price_cents = 5000 where sku = 'P3';
 select throws_ok(
   $$update public.products set promo_price_cents = 20000 where sku = 'P1'$$,
   '23514', null, 'promoção maior que o preço é rejeitada');
+
+-- Grupos de categorias: um único nível
+insert into public.categories (id, name, slug) values ('10000000-0000-0000-0000-000000000010', 'Grupo pgTAP', 'grupo-pgtap');
+update public.categories set parent_id = '10000000-0000-0000-0000-000000000010' where id = '10000000-0000-0000-0000-000000000001';
+select is((select parent_id from public.categories where id = '10000000-0000-0000-0000-000000000001'),
+          '10000000-0000-0000-0000-000000000010'::uuid, 'categoria entra num grupo');
+select throws_ok($$update public.categories set parent_id = '10000000-0000-0000-0000-000000000001' where id = '10000000-0000-0000-0000-000000000010'$$,
+                 '23514', null, 'grupo com subcategorias não vira subcategoria');
+select throws_ok($$insert into public.categories (name, slug, parent_id) values ('Neta', 'neta-pgtap', '10000000-0000-0000-0000-000000000001')$$,
+                 '23514', null, 'só um nível de grupo');
 
 -- Os testes de orçamento abaixo exigem o modo orçamento (independe do estado do banco)
 update public.store_settings set sales_mode = 'quote';

@@ -42,3 +42,6 @@ importacao/imagens/
 
 # Vercel CLI (ligação local do projeto)
 .vercel
+
+# Saídas da TasteSkill (inspeções e direções)
+.taste-skill/

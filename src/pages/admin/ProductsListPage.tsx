@@ -1,9 +1,10 @@
 import { Plus, Search, ShieldAlert } from 'lucide-react'
+import { CategoryOptions } from '../../components/admin/CategoryOptions'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { AdminPageHeader } from '../../components/admin/AdminLayout'
 import { PriceCell } from '../../components/admin/PriceCell'
-import { VialArt, vialKind } from '../../components/store/VialArt'
+import { VialArt, categoryColors, vialKind } from '../../components/store/VialArt'
 import { Badge, EmptyState, ErrorBox, Pagination, Spinner } from '../../components/ui/misc'
 import { useToast } from '../../components/ui/Toast'
 import { friendlyError } from '../../lib/supabase'
@@ -57,13 +58,15 @@ export default function ProductsListPage() {
   }, [searchText, search, setParam])
 
   const load = useCallback(() => {
-    listProducts({ search, status, categoryId, noPrice, needsReview, page, pageSize: PAGE_SIZE })
+    const childIds = categories.filter((c) => c.parent_id === categoryId).map((c) => c.id)
+    const categoryIds = childIds.length ? [categoryId, ...childIds] : undefined
+    listProducts({ search, status, categoryId, categoryIds, noPrice, needsReview, page, pageSize: PAGE_SIZE })
       .then((d) => {
         setData(d)
         setError(null)
       })
       .catch((e) => setError(friendlyError(e)))
-  }, [search, status, categoryId, noPrice, needsReview, page])
+  }, [search, status, categoryId, noPrice, needsReview, page, categories])
 
   useEffect(() => {
     load()
@@ -115,7 +118,7 @@ export default function ProductsListPage() {
 
       <div className="card mb-4 grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="relative sm:col-span-2 lg:col-span-1">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-500" />
           <input className="input pl-9" placeholder="Nome, referência ou marca" value={searchText} onChange={(e) => setSearchText(e.target.value)} aria-label="Buscar produtos" />
         </div>
         <select className="input" value={status} onChange={(e) => setParam('status', e.target.value)} aria-label="Status">
@@ -128,9 +131,7 @@ export default function ProductsListPage() {
         <select className="input" value={categoryId} onChange={(e) => setParam('categoria', e.target.value)} aria-label="Categoria">
           <option value="">Todas as categorias</option>
           <option value="none">Sem categoria</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
+          <CategoryOptions categories={categories} />
         </select>
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <label className="flex min-h-11 items-center gap-2">
@@ -173,6 +174,7 @@ export default function ProductsListPage() {
                       ) : (
                         <VialArt
                           seed={row.slug}
+                          color={categoryColors(categories.find((c) => c.id === row.category_id)?.slug, categories)}
                           kind={vialKind(`${row.presentation ?? ''} ${row.name}`)}
                           className="size-full"
                         />
@@ -210,8 +212,8 @@ export default function ProductsListPage() {
                     {row.status !== 'archived' && (
                       <button
                         onClick={() => void toggleStatus(row)}
-                        className={`h-10 rounded-lg px-3 text-xs font-semibold ${
-                          row.status === 'published' ? 'bg-slate-100 text-slate-700' : 'bg-brand text-white'
+                        className={`h-10 rounded-lg px-3 text-xs font-medium ${
+                          row.status === 'published' ? 'text-muted hover:text-ink' : 'border border-[#d1d5db] bg-white text-ink hover:border-ink'
                         }`}
                       >
                         {row.status === 'published' ? 'Ocultar' : 'Publicar'}

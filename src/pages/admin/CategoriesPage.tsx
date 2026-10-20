@@ -5,6 +5,8 @@ import { ImageInput } from '../../components/admin/ImageInput'
 import { CATEGORY_ICONS, CategoryIcon } from '../../components/ui/icons'
 import { EmptyState, ErrorBox, PageLoader, Toggle } from '../../components/ui/misc'
 import { useToast } from '../../components/ui/Toast'
+import { categoryColors } from '../../components/store/VialArt'
+import { buildCategoryTree } from '../../lib/categoryTree'
 import { slugify } from '../../lib/slug'
 import { friendlyError } from '../../lib/supabase'
 import { countProductsByCategory, deleteCategory, listAllCategories, saveCategory } from '../../services/admin'
@@ -12,7 +14,20 @@ import type { Category } from '../../types'
 
 type Draft = Partial<Category> & { name: string; slug: string }
 
-function CategoryForm({ initial, onClose, onSaved }: { initial: Draft; onClose: () => void; onSaved: () => void }) {
+function CategoryForm({
+  initial,
+  all,
+  onClose,
+  onSaved,
+}: {
+  initial: Draft
+  all: Category[]
+  onClose: () => void
+  onSaved: () => void
+}) {
+  // Grupos possíveis: categorias sem grupo (exceto ela mesma). Quem já tem subcategorias é grupo e não entra em outro.
+  const groupOptions = all.filter((g) => !g.parent_id && g.id !== initial.id)
+  const isGroupWithChildren = Boolean(initial.id && all.some((x) => x.parent_id === initial.id))
   const [c, setC] = useState<Draft>(initial)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -32,6 +47,7 @@ function CategoryForm({ initial, onClose, onSaved }: { initial: Draft; onClose: 
         image_url: c.image_url || null,
         sort_order: Math.trunc(Number(c.sort_order) || 0),
         is_visible: c.is_visible ?? true,
+        parent_id: c.parent_id || null,
       })
       onSaved()
     } catch (err) {
@@ -53,6 +69,26 @@ function CategoryForm({ initial, onClose, onSaved }: { initial: Draft; onClose: 
           <input id="cname" className="input" maxLength={80} required value={c.name} onChange={(e) => setC({ ...c, name: e.target.value, slug: c.id ? c.slug : slugify(e.target.value) })} />
         </div>
         <div>
+          <label className="label" htmlFor="cgroup">Grupo</label>
+          <select
+            id="cgroup"
+            className="input"
+            value={c.parent_id ?? ''}
+            disabled={isGroupWithChildren}
+            onChange={(e) => setC({ ...c, parent_id: e.target.value || null })}
+          >
+            <option value="">Nenhum (esta categoria é um grupo)</option>
+            {groupOptions.map((g) => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-slate-500">
+            {isGroupWithChildren
+              ? 'Esta categoria é um grupo com subcategorias.'
+              : 'A loja mostra só os grupos; as subcategorias aparecem como filtro dentro do grupo.'}
+          </p>
+        </div>
+        <div>
           <label className="label" htmlFor="cdesc">Descrição</label>
           <input id="cdesc" className="input" maxLength={500} value={c.description ?? ''} onChange={(e) => setC({ ...c, description: e.target.value })} />
         </div>
@@ -66,7 +102,7 @@ function CategoryForm({ initial, onClose, onSaved }: { initial: Draft; onClose: 
                 title={label}
                 aria-label={label}
                 onClick={() => setC({ ...c, icon: key })}
-                className={`flex size-11 items-center justify-center rounded-xl border ${c.icon === key ? 'border-brand bg-brand-light text-brand' : 'border-slate-200 text-slate-500'}`}
+                className={`flex size-11 items-center justify-center rounded-lg border ${c.icon === key ? 'border-ink bg-[#f1f5f9] text-ink' : 'border-[#e8e8e8] text-slate-500'}`}
               >
                 <CategoryIcon name={key} className="size-5" />
               </button>
@@ -143,15 +179,24 @@ export default function CategoriesPage() {
         <EmptyState title="Nenhuma categoria cadastrada.">As categorias também são criadas automaticamente na importação de produtos.</EmptyState>
       ) : (
         <div className="space-y-2">
-          {list.map((c) => (
-            <div key={c.id} className={`card flex items-center gap-3 p-3 ${c.is_visible ? '' : 'opacity-60'}`}>
-              <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-light">
-                {c.image_url ? <img src={c.image_url} alt="" className="size-full object-cover" /> : <CategoryIcon name={c.icon} className="size-6 text-brand" />}
-              </span>
+          {buildCategoryTree(list).flatMap(({ group, children }) => [group, ...children]).map((c) => (
+            <div
+              key={c.id}
+              className={`card flex items-center gap-3 p-3 ${c.parent_id ? 'ml-6 sm:ml-10' : ''} ${c.is_visible ? '' : 'opacity-60'}`}
+            >
+              {c.image_url ? (
+                <img src={c.image_url} alt="" className="size-10 shrink-0 rounded-lg object-cover" />
+              ) : (
+                // a bolinha é a cor dos frascos do grupo na loja
+                <span className="flex size-10 shrink-0 items-center justify-center" aria-hidden="true">
+                  <span className="size-2.5 rounded-full" style={{ backgroundColor: (categoryColors(c.slug, list) ?? ['#94a3b8'])[0] }} />
+                </span>
+              )}
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">{c.name}</p>
+                <p className="truncate font-medium text-ink">{c.name}</p>
                 <p className="text-xs text-slate-500">
-                  Ordem {c.sort_order} · {counts[c.id] ?? 0} produto(s) {c.is_visible ? '' : '· oculta'}
+                  {c.parent_id ? 'Subcategoria' : list.some((x) => x.parent_id === c.id) ? 'Grupo' : 'Categoria'} · Ordem{' '}
+                  {c.sort_order} · {counts[c.id] ?? 0} produto(s) {c.is_visible ? '' : '· oculta'}
                 </p>
               </div>
               <button className="btn-ghost size-11 px-0" onClick={() => void toggle(c)} aria-label={c.is_visible ? 'Ocultar' : 'Publicar'} title={c.is_visible ? 'Ocultar' : 'Publicar'}>
@@ -166,6 +211,7 @@ export default function CategoriesPage() {
       {editing && (
         <CategoryForm
           initial={editing}
+          all={list}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null)

@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
+import { CategoriesContext } from '../../contexts/CategoriesContext'
 import { useSettings } from '../../contexts/SettingsContext'
 import { isSupabaseConfigured } from '../../lib/supabase'
 import { fetchCategories } from '../../services/catalog'
@@ -47,15 +48,17 @@ export function StoreLayout() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <Header categories={categories} />
-      <main className="flex-1">
-        <Suspense fallback={<PageLoader />}>
-          <Outlet context={{ categories } satisfies StoreOutletContext} />
-        </Suspense>
-      </main>
-      <Footer />
-      <BottomNav />
-    </div>
+    <CategoriesContext.Provider value={categories}>
+      <div className="flex min-h-dvh flex-col">
+        <Header categories={categories} />
+        <main className="flex-1">
+          <Suspense fallback={<PageLoader />}>
+            <Outlet context={{ categories } satisfies StoreOutletContext} />
+          </Suspense>
+        </main>
+        <Footer />
+        <BottomNav />
+      </div>
+    </CategoriesContext.Provider>
   )
 }

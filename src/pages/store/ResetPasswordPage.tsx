@@ -1,4 +1,3 @@
-import { KeyRound } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { ErrorBox, PageLoader } from '../../components/ui/misc'
@@ -18,8 +17,8 @@ export default function ResetPasswordPage() {
 
   if (!session) {
     return (
-      <div className="mx-auto max-w-md px-4 py-10 text-center">
-        <p className="text-slate-600">Este link expirou ou já foi usado.</p>
+      <div className="mx-auto max-w-md px-(--margin) py-12 text-center">
+        <p className="text-muted">Este link expirou ou já foi usado.</p>
         <Link to="/entrar" className="btn-primary mt-6">Pedir um novo link</Link>
       </div>
     )
@@ -36,18 +35,15 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-8">
-      <form onSubmit={submit} className="card space-y-4 p-5 sm:p-6">
+    <div className="mx-auto max-w-md px-(--margin) py-12">
+      <form onSubmit={submit} className="space-y-4">
         <div className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-full bg-brand-light text-brand">
-            <KeyRound className="size-6" />
-          </span>
-          <h1 className="text-xl font-extrabold text-brand-dark">Criar nova senha</h1>
+          <h1 className="text-2xl font-semibold text-ink">Criar nova senha</h1>
         </div>
         <div>
           <label className="label" htmlFor="password">Nova senha *</label>
           <input id="password" type="password" className="input" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <p className="mt-1 text-xs text-slate-500">Mínimo de 8 caracteres, com letras e números.</p>
+          <p className="mt-1 text-xs text-muted">Mínimo de 8 caracteres, com letras e números.</p>
         </div>
         {error && <ErrorBox message={error} />}
         <button className="btn-primary w-full" disabled={busy}>{busy ? 'Salvando…' : 'Salvar nova senha'}</button>

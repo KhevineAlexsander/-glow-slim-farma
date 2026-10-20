@@ -13,6 +13,8 @@ export interface Category {
   image_url: string | null
   sort_order: number
   is_visible: boolean
+  /** Grupo (categoria-mãe). null = é um grupo ou categoria solta. */
+  parent_id: string | null
 }
 
 /** Produto como exposto pela view pública `catalog_products`. */

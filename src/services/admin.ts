@@ -39,6 +39,8 @@ export interface ProductListQuery {
   search?: string
   status?: ProductStatus | 'active' | ''
   categoryId?: string
+  /** Grupo selecionado: o próprio id e os das subcategorias. */
+  categoryIds?: string[]
   noPrice?: boolean
   needsReview?: boolean
   page: number
@@ -58,6 +60,7 @@ export async function listProducts(q: ProductListQuery): Promise<{ rows: Product
   if (q.status === 'active') query = query.neq('status', 'archived')
   else if (q.status) query = query.eq('status', q.status)
   if (q.categoryId === 'none') query = query.is('category_id', null)
+  else if (q.categoryIds?.length) query = query.in('category_id', q.categoryIds)
   else if (q.categoryId) query = query.eq('category_id', q.categoryId)
   if (q.noPrice) query = query.eq('price_cents', 0)
   if (q.needsReview) query = query.eq('needs_review', true)

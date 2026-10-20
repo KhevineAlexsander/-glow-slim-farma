@@ -1,10 +1,12 @@
-import { ChevronLeft, Minus, Plus, ShieldAlert } from 'lucide-react'
+import { ChevronRight, Minus, Plus, ShieldAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ProductAction } from '../../components/store/ProductAction'
 import { PriceBlock, ProductImage } from '../../components/store/ProductCard'
 import { EmptyState, PageLoader } from '../../components/ui/misc'
+import { useCategories } from '../../contexts/CategoriesContext'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
+import { groupOf } from '../../lib/categoryTree'
 import { productDisplay } from '../../lib/pricing'
 import { fetchProductBySlug } from '../../services/catalog'
 import type { CatalogProduct } from '../../types'
@@ -12,6 +14,7 @@ import type { CatalogProduct } from '../../types'
 export default function ProductPage() {
   const { slug = '' } = useParams()
   const s = useLoadedSettings()
+  const categories = useCategories()
   const [product, setProduct] = useState<CatalogProduct | null | undefined>(undefined)
   const [imageIndex, setImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
@@ -31,10 +34,10 @@ export default function ProductPage() {
   if (product === undefined) return <PageLoader />
   if (product === null) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <EmptyState title="Produto não encontrado.">
-          Ele pode ter sido removido ou ainda não foi publicado.{' '}
-          <Link to="/produtos" className="font-semibold text-brand">
+      <div className="wrap py-8">
+        <h1 className="mb-6 text-2xl font-semibold text-ink">Produto não encontrado</h1>
+        <EmptyState title="Ele pode ter sido removido ou ainda não foi publicado.">
+          <Link to="/produtos" className="font-medium text-ink underline">
             Ver produtos
           </Link>
         </EmptyState>
@@ -52,34 +55,51 @@ export default function ProductPage() {
     ['Via de aplicação', product.usage_route],
     ['Categoria', product.category_name],
   ].filter(([, v]) => v) as [string, string][]
+  const group = product.category_slug ? groupOf(product.category_slug, categories) : undefined
+  const crumbs = [
+    { to: '/produtos', label: 'Produtos' },
+    ...(group && group.slug !== product.category_slug
+      ? [{ to: `/produtos?categoria=${group.slug}`, label: group.name }]
+      : []),
+    ...(product.category_name
+      ? [{ to: `/produtos?categoria=${product.category_slug}`, label: product.category_name }]
+      : []),
+  ]
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-4 sm:py-8">
-      <Link to="/produtos" className="mb-2 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand">
-        <ChevronLeft className="size-4" /> Voltar aos produtos
-      </Link>
+    <div className="wrap py-4 sm:py-8">
+      <nav aria-label="Você está em" className="mb-4">
+        <ol className="flex flex-wrap items-center gap-x-1 text-sm text-muted">
+          {crumbs.map((c, i) => (
+            <li key={c.to} className="flex items-center gap-1">
+              {i > 0 && <ChevronRight className="size-4" aria-hidden="true" />}
+              <Link to={c.to} className="inline-flex min-h-11 items-center hover:text-ink hover:underline">
+                {c.label}
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </nav>
 
-      <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+      <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
         <div>
-          <div className="card overflow-hidden p-4">
-            {mainImage ? (
-              <img
-                src={mainImage.url}
-                alt={mainImage.alt || product.name}
-                className="aspect-square w-full rounded-xl bg-white object-contain"
-              />
-            ) : (
-              <ProductImage product={product} className="aspect-square w-full rounded-xl" />
-            )}
-          </div>
+          {mainImage ? (
+            <img
+              src={mainImage.url}
+              alt={mainImage.alt || product.name}
+              className="aspect-square w-full bg-white object-contain"
+            />
+          ) : (
+            <ProductImage product={product} className="aspect-square w-full" />
+          )}
           {product.images.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto">
               {product.images.map((img, i) => (
                 <button
                   key={img.url}
                   onClick={() => setImageIndex(i)}
-                  className={`size-16 shrink-0 overflow-hidden rounded-xl border-2 bg-white ${
-                    i === imageIndex ? 'border-brand' : 'border-transparent'
+                  className={`size-16 shrink-0 overflow-hidden border-2 bg-white ${
+                    i === imageIndex ? 'border-ink' : 'border-transparent'
                   }`}
                   aria-label={`Imagem ${i + 1}`}
                 >
@@ -91,29 +111,21 @@ export default function ProductPage() {
         </div>
 
         <div>
-          {product.category_name && (
-            <Link
-              to={`/produtos?categoria=${product.category_slug}`}
-              className="inline-flex min-h-11 items-center text-xs font-bold tracking-wider text-brand uppercase"
-            >
-              {product.category_name}
-            </Link>
-          )}
-          <h1 className="mt-1 text-2xl font-extrabold text-slate-900 sm:text-3xl">{product.name}</h1>
-          {product.short_description && <p className="mt-2 text-slate-600">{product.short_description}</p>}
+          <h1 className="text-2xl font-semibold text-balance text-ink sm:text-3xl">{product.name}</h1>
+          {product.short_description && <p className="mt-2 text-muted">{product.short_description}</p>}
 
           <div className="mt-5">
             <PriceBlock product={product} size="lg" />
             {d.discountPercent != null && d.discountPercent > 0 && (
-              <span className="mt-1 inline-block rounded-full bg-brand-light px-2 py-0.5 text-xs font-bold text-brand-dark">
+              <span className="tabular mt-1 inline-block text-sm text-muted">
                 {d.discountPercent}% de desconto
               </span>
             )}
           </div>
 
           {d.restricted && (
-            <div className="mt-4 flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-              <ShieldAlert className="mt-0.5 size-5 shrink-0" />
+            <div className="mt-4 flex gap-2 bg-[#fffbeb] p-3 text-sm text-[#92400e]">
+              <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
               <p>
                 {product.requires_prescription ? 'Produto sujeito a prescrição. ' : 'Produto de venda restrita. '}
                 {s.restricted_notice}
@@ -123,19 +135,19 @@ export default function ProductPage() {
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             {canChooseQty && (
-              <div className="flex h-11 items-center justify-between rounded-full border border-slate-200 sm:w-36">
+              <div className="flex h-11 items-center justify-between border border-[#cbd5e1] sm:w-36">
                 <button
-                  className="flex size-11 items-center justify-center text-slate-600"
+                  className="flex size-11 items-center justify-center text-ink hover:bg-[#f1f5f9]"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   aria-label="Diminuir quantidade"
                 >
                   <Minus className="size-4" />
                 </button>
-                <span className="font-semibold" aria-live="polite">
+                <span className="tabular font-medium text-ink" aria-live="polite">
                   {quantity}
                 </span>
                 <button
-                  className="flex size-11 items-center justify-center text-slate-600"
+                  className="flex size-11 items-center justify-center text-ink hover:bg-[#f1f5f9]"
                   onClick={() => setQuantity((q) => Math.min(999, q + 1))}
                   aria-label="Aumentar quantidade"
                 >
@@ -149,11 +161,11 @@ export default function ProductPage() {
           </div>
 
           {details.length > 0 && (
-            <dl className="mt-8 divide-y divide-slate-100 rounded-2xl border border-slate-100">
+            <dl className="mt-10 border-t border-[#e8e8e8]">
               {details.map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4 px-4 py-3 text-sm">
-                  <dt className="text-slate-500">{k}</dt>
-                  <dd className="text-right font-medium text-slate-800">{v}</dd>
+                <div key={k} className="flex justify-between gap-4 border-b border-[#e8e8e8] py-3 text-sm">
+                  <dt className="text-muted">{k}</dt>
+                  <dd className="text-right font-medium text-ink">{v}</dd>
                 </div>
               ))}
             </dl>
@@ -161,17 +173,17 @@ export default function ProductPage() {
 
           {product.description && (
             <section className="mt-8">
-              <h2 className="mb-2 font-bold text-slate-900">Descrição</h2>
-              <p className="text-sm leading-relaxed whitespace-pre-line text-slate-600">{product.description}</p>
+              <h2 className="mb-2 text-base font-medium text-ink">Descrição</h2>
+              <p className="max-w-[65ch] text-sm leading-relaxed whitespace-pre-line text-muted">{product.description}</p>
             </section>
           )}
           {product.composition && (
             <section className="mt-6">
-              <h2 className="mb-2 font-bold text-slate-900">Composição</h2>
-              <p className="text-sm leading-relaxed whitespace-pre-line text-slate-600">{product.composition}</p>
+              <h2 className="mb-2 text-base font-medium text-ink">Composição</h2>
+              <p className="max-w-[65ch] text-sm leading-relaxed whitespace-pre-line text-muted">{product.composition}</p>
             </section>
           )}
-          <p className="mt-8 text-xs text-slate-400">
+          <p className="mt-8 text-xs text-muted">
             As informações não substituem a orientação de um profissional de saúde habilitado.
           </p>
         </div>

@@ -94,20 +94,22 @@ export default function SettingsPage() {
     <form onSubmit={submit} className="mx-auto max-w-3xl pb-24">
       <AdminPageHeader title="Configurações" />
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-6 flex gap-6 overflow-x-auto border-b border-[#e8e8e8] [scrollbar-width:none]" role="tablist">
         {TABS.map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`h-10 shrink-0 rounded-full px-4 text-sm font-semibold ${tab === t ? 'bg-brand text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200'}`}
+            role="tab"
+            aria-selected={tab === t}
+            className={`-mb-px h-11 shrink-0 border-b-2 px-1 text-sm ${tab === t ? 'border-ink font-medium text-ink' : 'border-transparent text-muted hover:text-ink'}`}
           >
             {t}
           </button>
         ))}
       </div>
 
-      <div className="card space-y-4 p-4 sm:p-6">
+      <div className="card space-y-4 p-4 sm:p-6" role="tabpanel" aria-label={tab}>
         {tab === 'Loja' && (
           <>
             <Field label="Nome da loja *"><input className="input" required {...text('store_name', 80)} /></Field>
@@ -145,7 +147,7 @@ export default function SettingsPage() {
                 <option value="order">Compra — carrinho com pedido (somente produtos com preço e sem restrição)</option>
               </select>
             </Field>
-            <p className="rounded-xl bg-brand-light/60 p-3 text-xs text-slate-600">
+            <p className="rounded-lg bg-[#f6f8fb] p-3 text-xs text-muted">
               Em ambos os modos o pedido/orçamento é registrado no painel (menu Pedidos). Não há pagamento online: a loja
               confirma valores, pagamento e entrega diretamente com o cliente.
             </p>
@@ -197,7 +199,7 @@ export default function SettingsPage() {
             ).map(([k, label]) => (
               <div key={k} className="flex items-center gap-3">
                 <input type="color" aria-label={label} className="h-11 w-14 cursor-pointer rounded-lg border border-slate-200" value={s[k]} onChange={(e) => set(k, e.target.value.toUpperCase())} />
-                <Field label={label}><input className="input max-w-32 font-mono" {...text(k, 7)} /></Field>
+                <Field label={label}><input className="input max-w-32 font-mono" {...text(k, 7)} /></Field>{/* taste-skill-ignore: código hexadecimal da cor */}
               </div>
             ))}
             <button type="button" className="btn-outline" onClick={() => setS({ ...s, ...DEFAULT_COLORS })}>
@@ -216,7 +218,7 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-100 bg-white/95 p-3 backdrop-blur lg:left-64">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#e8e8e8] bg-white p-3 lg:right-[9px] lg:bottom-[9px] lg:left-[241px] lg:rounded-b-2xl">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           {error && <div className="flex-1"><ErrorBox message={error} /></div>}
           <button type="submit" className="btn-primary ml-auto min-w-40" disabled={saving}>

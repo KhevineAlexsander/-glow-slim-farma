@@ -40,7 +40,7 @@ export function ImageInput({
     <div>
       <span className="label">{label}</span>
       <div className="flex items-center gap-3">
-        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
           {value ? <img src={value} alt="" className="size-full object-contain" /> : <ImagePlus className="size-6 text-slate-300" />}
         </div>
         <div className="flex flex-wrap gap-2">

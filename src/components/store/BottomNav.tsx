@@ -9,11 +9,11 @@ export function BottomNav() {
   const s = useLoadedSettings()
   const { count } = useCart()
   const item = ({ isActive }: { isActive: boolean }) =>
-    `flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${isActive ? 'text-brand' : 'text-slate-500'}`
+    `flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium ${isActive ? 'text-ink' : 'text-muted'}`
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex bg-[#f4f7fb] pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label="Navegação principal"
     >
       <NavLink to="/" end className={item}>
@@ -26,7 +26,7 @@ export function BottomNav() {
         <span className="relative">
           <ShoppingCart className="size-6" />
           {count > 0 && (
-            <span className="absolute -top-1.5 -right-2.5 flex min-w-4.5 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white">
+            <span className="absolute -top-1.5 -right-2.5 flex min-w-4.5 items-center justify-center rounded-full bg-ink px-1 text-xs font-semibold text-white tabular">
               {count > 99 ? '99+' : count}
             </span>
           )}
@@ -38,7 +38,7 @@ export function BottomNav() {
           href={whatsappLink(s.whatsapp_number, `Olá, ${s.store_name}!`)}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-slate-500"
+          className="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium text-muted"
         >
           <MessageCircle className="size-6" /> WhatsApp
         </a>

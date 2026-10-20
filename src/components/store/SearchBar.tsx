@@ -19,14 +19,14 @@ export function SearchBar({ className = '' }: { className?: string }) {
 
   return (
     <form onSubmit={submit} role="search" className={`relative ${className}`}>
-      <Search className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-slate-400" />
+      <Search className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
       <input
         type="search"
         value={term}
         onChange={(e) => setTerm(e.target.value)}
         placeholder="Buscar produtos, marcas ou referências…"
         aria-label="Buscar produtos"
-        className="h-12 w-full rounded-full border border-brand/15 bg-white pr-4 pl-12 text-base shadow-sm outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 sm:text-sm"
+        className="h-12 w-full border border-transparent bg-[#f1f5f9] pr-4 pl-12 text-base text-ink outline-none placeholder:text-[#64748b] focus:border-brand focus:bg-white sm:text-sm"
       />
     </form>
   )

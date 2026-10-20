@@ -50,62 +50,72 @@ function AdminLayout() {
   }, [settings?.store_name, location.pathname])
 
   const nav = (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-0.5" aria-label="Painel">
       {NAV.map(({ to, label, icon: Icon, end }) => (
         <NavLink
           key={to}
           to={to}
           end={end}
           className={({ isActive }) =>
-            `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold ${
-              isActive ? 'bg-brand text-white' : 'text-slate-600 hover:bg-brand-light'
+            `flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm lg:min-h-9 ${
+              isActive ? 'bg-[#e2e8f0] font-medium text-ink' : 'text-muted hover:text-ink'
             }`
           }
         >
-          <Icon className="size-5" /> {label}
+          <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" /> {label}
         </NavLink>
       ))}
     </nav>
   )
 
+  // O produto e o escopo no topo da moldura: a marca (o logo já traz o nome) e "Painel"
+  const brand = (
+    <div className="flex flex-col items-start gap-1 px-2">
+      <img src={settings?.logo_url || '/logo.svg'} alt={settings?.store_name ?? 'Loja'} className="h-10 w-auto" />
+      <span className="text-xs text-muted">Painel administrativo</span>
+    </div>
+  )
+
   const footer = (
-    <div className="mt-auto space-y-1 border-t border-slate-100 pt-4">
-      <p className="truncate px-3 text-xs text-slate-400">{session?.user.email}</p>
-      <Link to="/" target="_blank" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100">
-        <ExternalLink className="size-5" /> Ver loja
+    <div className="mt-auto space-y-0.5 pt-4">
+      <p className="truncate px-3 pb-1 text-xs text-muted">{session?.user.email}</p>
+      <Link to="/" target="_blank" className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm text-muted hover:text-ink lg:min-h-9">
+        <ExternalLink className="size-4" strokeWidth={1.75} aria-hidden="true" /> Ver loja
       </Link>
-      <button onClick={() => void signOut()} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-slate-600 hover:bg-red-50 hover:text-red-600">
-        <LogOut className="size-5" /> Sair
+      <button onClick={() => void signOut()} className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 text-sm text-muted hover:text-red-700 lg:min-h-9">
+        <LogOut className="size-4" strokeWidth={1.75} aria-hidden="true" /> Sair
       </button>
     </div>
   )
 
   return (
-    <div className="min-h-dvh bg-slate-50 lg:flex">
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-slate-100 bg-white p-4 lg:flex">
-        <img src={settings?.logo_url || '/logo.svg'} alt="" className="mb-6 h-12 w-auto self-start" />
+    // TasteSkill, estilo "framed-sheet": moldura tingida do azul da marca com a barra lateral;
+    // o trabalho fica numa folha branca recuada 8px, com linha de 1px e cantos de 16px, sem sombra.
+    <div className="admin min-h-dvh bg-[#f1f4f8] lg:flex">
+      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col p-3 pt-4 lg:flex">
+        <div className="mb-5">{brand}</div>
         {nav}
         {footer}
       </aside>
 
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-2 lg:hidden">
+      <header className="sticky top-0 z-30 flex h-12 items-center gap-2 bg-[#f1f4f8] px-2 lg:hidden">
         <button className="btn-ghost size-11 px-0" onClick={() => setOpen(true)} aria-label="Abrir menu">
           <Menu className="size-6" />
         </button>
-        <span className="font-bold text-brand-dark">Painel</span>
+        <span className="text-sm font-medium text-ink">{settings?.store_name ?? 'Loja'} · Painel</span>
       </header>
 
       {open && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} />
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu do painel">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <aside
-            className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col overflow-y-auto overscroll-contain bg-white p-4 shadow-xl"
+            className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col overflow-y-auto overscroll-contain bg-[#f1f4f8] p-3 shadow-xl"
             onClick={(e) => {
               if ((e.target as HTMLElement).closest('a')) setOpen(false)
             }}
           >
             <div className="mb-4 flex items-center justify-between">
-              <img src={settings?.logo_url || '/logo.svg'} alt="" className="h-10 w-auto" />
+              {brand}
               <button className="btn-ghost size-11 px-0" onClick={() => setOpen(false)} aria-label="Fechar menu">
                 <X className="size-6" />
               </button>
@@ -116,7 +126,7 @@ function AdminLayout() {
         </div>
       )}
 
-      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+      <main className="min-w-0 flex-1 bg-white p-4 sm:p-6 lg:my-2 lg:mr-2 lg:min-h-[calc(100dvh-1rem)] lg:rounded-[10px] lg:border lg:border-[#e6e9ee]">
         <Suspense fallback={<PageLoader />}>
           <Outlet />
         </Suspense>
@@ -125,10 +135,22 @@ function AdminLayout() {
   )
 }
 
-export function AdminPageHeader({ title, children }: { title: string; children?: ReactNode }) {
+export function AdminPageHeader({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string
+  /** Uma frase sobre os dados (o achado, o período), nunca sobre a interface. */
+  subtitle?: ReactNode
+  children?: ReactNode
+}) {
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <h1 className="text-2xl font-extrabold text-slate-900">{title}</h1>
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+      </div>
       {children && <div className="flex flex-wrap gap-2">{children}</div>}
     </div>
   )

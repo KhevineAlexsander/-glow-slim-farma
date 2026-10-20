@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { centsToInput, MAX_PRICE_CENTS, parseBRLToCents } from '../../lib/money'
 
@@ -47,7 +47,7 @@ export function PriceCell({
 
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-slate-400">R$</span>
+      <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-slate-500">R$</span>
       <input
         aria-label={label}
         inputMode="decimal"
@@ -67,7 +67,7 @@ export function PriceCell({
         }`}
       />
       {state === 'saved' && <Check className="absolute top-1/2 right-1.5 size-4 -translate-y-1/2 text-emerald-500" />}
-      {state === 'saving' && <span className="absolute top-1/2 right-1.5 size-2 -translate-y-1/2 animate-pulse rounded-full bg-brand" />}
+      {state === 'saving' && <Loader2 className="absolute top-1/2 right-1.5 size-4 -translate-y-1/2 animate-spin text-muted" aria-label="Salvando" />}
     </div>
   )
 }

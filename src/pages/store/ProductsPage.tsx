@@ -2,11 +2,16 @@ import { X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router'
 import { ProductCard } from '../../components/store/ProductCard'
+import { groupColors } from '../../components/store/VialArt'
 import type { StoreOutletContext } from '../../components/store/StoreLayout'
 import { EmptyState, ErrorBox, PageLoader } from '../../components/ui/misc'
 import { effectivePriceCents, isRestricted } from '../../lib/pricing'
+import { buildCategoryTree, groupOf, slugsForCategory } from '../../lib/categoryTree'
 import { fetchCatalog, type CatalogSort } from '../../services/catalog'
 import type { CatalogProduct } from '../../types'
+
+/** Produtos por página: divisível por 2, 3, 4 e 5 colunas, sem card órfão. */
+const PAGE = 60
 
 const FLAGS = {
   destaque: { key: 'is_featured', label: 'Destaques' },
@@ -32,12 +37,20 @@ export default function ProductsPage() {
 
   const [products, setProducts] = useState<CatalogProduct[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [limit, setLimit] = useState(PAGE)
+  // Grupo selecionado inclui todas as suas subcategorias
+  const categorySlugs = categoria ? slugsForCategory(categoria, categories) : []
+  const slugsKey = categorySlugs.join(',')
+  const tree = useMemo(() => buildCategoryTree(categories), [categories])
+  const activeGroup = categoria ? groupOf(categoria, categories) : undefined
+  const activeChildren = tree.find((t) => t.group.id === activeGroup?.id)?.children ?? []
 
   useEffect(() => {
     setProducts(null)
+    setLimit(PAGE)
     fetchCatalog({
       search: q,
-      categorySlug: categoria || undefined,
+      categorySlugs: slugsKey ? slugsKey.split(',') : undefined,
       flag: flag?.key,
       sort: sort === 'name_asc' || sort === 'name_desc' ? sort : 'relevance',
     })
@@ -46,7 +59,7 @@ export default function ProductsPage() {
         setError(null)
       })
       .catch(() => setError('Não foi possível carregar os produtos.'))
-  }, [q, categoria, flag?.key, sort])
+  }, [q, slugsKey, flag?.key, sort])
 
   const sorted = useMemo(() => {
     if (!products) return null
@@ -72,31 +85,27 @@ export default function ProductsPage() {
   const currentCategory = categories.find((c) => c.slug === categoria)
   const title = currentCategory?.name ?? flag?.label ?? (q ? `Resultados para “${q}”` : 'Todos os produtos')
 
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      <h1 className="text-2xl font-extrabold text-brand-dark">{title}</h1>
+  const chip = (active: boolean) =>
+    `inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors ${
+      active ? 'bg-ink text-white' : 'bg-[#f1f5f9] text-ink hover:bg-[#e2e8f0]'
+    }`
+  const subChip = (active: boolean) =>
+    `inline-flex h-10 shrink-0 items-center rounded-full border px-4 text-sm font-medium whitespace-nowrap transition-colors ${
+      active ? 'border-ink text-ink' : 'border-[#cbd5e1] text-muted hover:text-ink'
+    }`
+  const total = sorted?.length ?? 0
+  const shown = sorted ? sorted.slice(0, limit) : null
 
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="-mx-4 flex flex-1 gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
-          <button
-            onClick={() => update('categoria', '')}
-            className={`h-10 shrink-0 rounded-full px-4 text-sm font-semibold ${!categoria ? 'bg-brand text-white' : 'bg-brand-light text-brand-dark'}`}
-          >
-            Todas
-          </button>
-          {categories.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => update('categoria', c.slug)}
-              className={`h-10 shrink-0 rounded-full px-4 text-sm font-semibold ${
-                categoria === c.slug ? 'bg-brand text-white' : 'bg-brand-light text-brand-dark'
-              }`}
-            >
-              {c.name}
-            </button>
-          ))}
+  return (
+    <div className="wrap py-8">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+          <p className="mt-1 text-sm text-muted" aria-live="polite">
+            {sorted ? `${total} ${total === 1 ? 'produto' : 'produtos'}` : 'Carregando…'}
+          </p>
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex items-center gap-2 text-sm text-muted">
           Ordenar
           <select className="input w-auto" value={sort} onChange={(e) => update('ordem', e.target.value)}>
             <option value="relevance">Relevância</option>
@@ -108,16 +117,62 @@ export default function ProductsPage() {
         </label>
       </div>
 
+      {/* Grupos numa fileira só (rola de lado quando não cabe); a bolinha é a cor dos frascos do grupo */}
+      <div
+        className="-mx-(--margin) mt-6 flex gap-2 overflow-x-auto px-(--margin) pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="Grupos de categorias"
+      >
+        <button onClick={() => update('categoria', '')} aria-pressed={!categoria} className={chip(!categoria)}>
+          Todas
+        </button>
+        {tree.map(({ group }, index) => (
+          <button
+            key={group.id}
+            onClick={() => update('categoria', group.slug)}
+            aria-pressed={activeGroup?.id === group.id}
+            className={chip(activeGroup?.id === group.id)}
+          >
+            <span className="size-2.5 rounded-full" style={{ backgroundColor: groupColors(index)[0] }} aria-hidden="true" />
+            {group.name}
+          </button>
+        ))}
+      </div>
+
+      {activeGroup && activeChildren.length > 0 && (
+        <div
+          className="-mx-(--margin) mt-2 flex gap-2 overflow-x-auto px-(--margin) pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          aria-label={`Subcategorias de ${activeGroup.name}`}
+        >
+          <button
+            onClick={() => update('categoria', activeGroup.slug)}
+            aria-pressed={categoria === activeGroup.slug}
+            className={subChip(categoria === activeGroup.slug)}
+          >
+            Tudo em {activeGroup.name}
+          </button>
+          {activeChildren.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => update('categoria', c.slug)}
+              aria-pressed={categoria === c.slug}
+              className={subChip(categoria === c.slug)}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {(q || flag) && (
         <div className="mt-3 flex flex-wrap gap-2">
           {q && (
-            <button onClick={() => update('q', '')} className="flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-              Busca: {q} <X className="size-3.5" />
+            <button onClick={() => update('q', '')} className={subChip(true)} aria-label={`Limpar busca: ${q}`}>
+              Busca: {q} <X className="ml-1.5 size-4" aria-hidden="true" />
             </button>
           )}
           {flag && flagEntry && (
-            <button onClick={() => update(flagEntry, '')} className="flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-              {flag.label} <X className="size-3.5" />
+            <button onClick={() => update(flagEntry, '')} className={subChip(true)} aria-label={`Limpar filtro: ${flag.label}`}>
+              {flag.label} <X className="ml-1.5 size-4" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -126,19 +181,28 @@ export default function ProductsPage() {
       <div className="mt-6">
         {error ? (
           <ErrorBox message={error} />
-        ) : !sorted ? (
+        ) : !shown ? (
           <PageLoader />
-        ) : sorted.length === 0 ? (
+        ) : shown.length === 0 ? (
           <EmptyState title="Nenhum produto encontrado.">
-            Tente outra busca ou <Link to="/produtos" className="font-semibold text-brand">veja todos os produtos</Link>.
+            Tente outra busca ou <Link to="/produtos" className="font-semibold text-brand-dark underline">veja todos os produtos</Link>.
           </EmptyState>
         ) : (
           <>
-            <p className="mb-3 text-sm text-slate-500">{sorted.length} produto(s)</p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {sorted.map((p) => (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {shown.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
+            </div>
+            <div className="mt-10 flex flex-col items-center gap-3">
+              <p className="tabular text-sm text-muted">
+                Mostrando 1–{shown.length} de {total}
+              </p>
+              {shown.length < total && (
+                <button type="button" className="btn-outline" onClick={() => setLimit((n) => n + PAGE)}>
+                  Mostrar mais
+                </button>
+              )}
             </div>
           </>
         )}
