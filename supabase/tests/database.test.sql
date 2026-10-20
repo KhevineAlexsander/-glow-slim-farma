@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Em produção o pgTAP pode estar em outro esquema: procura nos dois.
 set local search_path to public, extensions;
-select plan(41);
+select plan(54);
 
 -- ---------------------------------------------------------------------------
 -- Dados de teste (como postgres, ignorando RLS)
@@ -15,9 +15,15 @@ values ('00000000-0000-0000-0000-0000000000a1', 'admin@teste.local', 'authentica
 select is((select role from public.profiles where id = '00000000-0000-0000-0000-0000000000b2'),
           'none', 'novo usuário nasce sem permissão de admin');
 
+insert into auth.users (id, email, aud, role, raw_user_meta_data)
+values ('00000000-0000-0000-0000-0000000000c3', 'cadastro@teste.local', 'authenticated', 'authenticated',
+        '{"full_name":"Cliente Novo","phone":"(11) 96666-5555","role":"admin"}');
+select is((select full_name || '|' || phone || '|' || role from public.profiles where id = '00000000-0000-0000-0000-0000000000c3'),
+          'Cliente Novo|11966665555|none', 'cadastro grava nome e telefone, e ignora role enviada pelo cliente');
+
 update public.profiles set role = 'admin' where id = '00000000-0000-0000-0000-0000000000a1';
 
-insert into public.categories (id, name, slug) values ('10000000-0000-0000-0000-000000000001', 'Teste', 'teste');
+insert into public.categories (id, name, slug) values ('10000000-0000-0000-0000-000000000001', 'Teste pgTAP', 'teste-pgtap');
 
 insert into public.products (id, name, slug, sku, category_id, price_cents, promo_price_cents, status)
 values ('20000000-0000-0000-0000-000000000001', 'Produto Com Preço', 'produto-com-preco', 'P1',
@@ -50,7 +56,7 @@ select throws_ok(
 update public.store_settings set sales_mode = 'quote';
 
 -- Produto publicado dentro de categoria oculta + imagens
-insert into public.categories (id, name, slug, is_visible) values ('10000000-0000-0000-0000-000000000002', 'Oculta', 'oculta', false);
+insert into public.categories (id, name, slug, is_visible) values ('10000000-0000-0000-0000-000000000002', 'Oculta pgTAP', 'oculta-pgtap', false);
 insert into public.products (id, name, slug, sku, category_id, status)
 values ('20000000-0000-0000-0000-000000000005', 'Em Categoria Oculta', 'em-categoria-oculta', 'P5',
         '10000000-0000-0000-0000-000000000002', 'published');
@@ -81,9 +87,8 @@ select is((select count(*)::int from public.catalog_products where sku = 'P5'), 
           'produto de categoria oculta não aparece');
 select is((select images::text from public.catalog_products where sku = 'P1'),
           '[{"url" : "https://exemplo.local/p1.png", "alt" : null}]', 'vitrine traz as imagens do produto');
-select is((select count(*)::int from public.product_images
-           where product_id in ('20000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000004')), 1,
-          'anon só vê imagens de produtos publicados');
+select throws_ok($$select * from public.product_images$$, '42501', null,
+                 'anon não lê a tabela de imagens diretamente (só pela vitrine)');
 select is((select count(*)::int from public.catalog_products where search_text like '%produto com preco%'), 1,
           'busca ignora acentos e maiúsculas');
 select throws_ok($$update public.store_settings set store_name = 'hack'$$, '42501', null,
@@ -151,9 +156,24 @@ select set_config('request.jwt.claims',
 
 select is((select count(*)::int from public.products), 0, 'usuário comum não lê produtos do painel');
 update public.products set price_cents = 1 where sku = 'P1';
-update public.profiles set role = 'admin' where id = '00000000-0000-0000-0000-0000000000b2';
-select is((select count(*)::int from public.orders), 0, 'usuário comum não lê pedidos');
+select throws_ok($$update public.profiles set role = 'admin' where id = '00000000-0000-0000-0000-0000000000b2'$$, '42501', null,
+                 'cliente não consegue alterar a própria permissão');
 select is(public.is_admin(), false, 'usuário comum não consegue se promover a admin');
+select is((select count(*)::int from public.orders), 0, 'cliente não vê pedidos de outras pessoas');
+select is((select count(*)::int from public.catalog_products where sku in ('P1','P2','P3','P4','P5')), 3,
+          'cliente logado vê a vitrine (só publicados, sem categoria oculta)');
+select is((select price_cents from public.catalog_products where sku = 'P3'), 0,
+          'cliente logado também não vê preço de produto com prescrição');
+select lives_ok($$update public.profiles set full_name = 'Cliente B', phone = '11977776666' where id = '00000000-0000-0000-0000-0000000000b2'$$,
+                'cliente atualiza o próprio nome e telefone');
+update public.profiles set full_name = 'invadido' where id = '00000000-0000-0000-0000-0000000000a1';
+select is((select count(*)::int from public.profiles where id = '00000000-0000-0000-0000-0000000000a1'), 0, 'cliente não vê o perfil de outra pessoa');
+select ok((public.place_order('{"name":"Cliente B","phone":"11977776666"}',
+             '[{"product_id":"20000000-0000-0000-0000-000000000001","quantity":1}]') ->> 'order_number') is not null,
+          'cliente logado faz pedido');
+select is((select count(*)::int from public.orders), 1, 'cliente vê o próprio pedido');
+select is((select count(*)::int from public.order_items), 1, 'cliente vê os itens do próprio pedido');
+select is((select count(*)::int from public.order_status_history), 1, 'cliente vê o histórico do próprio pedido');
 
 -- ---------------------------------------------------------------------------
 -- Administrador
@@ -165,6 +185,11 @@ select is((select price_cents from public.products where sku = 'P1'), 10000,
           'preço não foi alterado pelo usuário comum');
 select lives_ok($$update public.products set price_cents = 12345 where sku = 'P2'$$, 'admin altera preço');
 select is((select count(*)::int from public.orders where customer_name in ('Ana','Bia')), 2, 'admin lê pedidos');
+select is((select count(*)::int from public.orders where customer_name = 'Cliente B' and user_id = '00000000-0000-0000-0000-0000000000b2'), 1,
+          'pedido do cliente logado fica ligado à conta');
+select is((select count(*)::int from public.orders where customer_name in ('Ana','Bia') and user_id is null), 2,
+          'pedido de visitante fica sem conta');
+select isnt((select full_name from public.profiles where id = '00000000-0000-0000-0000-0000000000a1'), 'invadido', 'cliente não altera o perfil de outra pessoa');
 select lives_ok(
   $$update public.orders set status = 'in_review', documents_verified = true where customer_name = 'Ana'$$,
   'admin altera status do pedido');

@@ -1,7 +1,8 @@
-import { Menu, ShoppingCart, X } from 'lucide-react'
+import { Lock, Menu, ShoppingCart, UserRound, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, NavLink, useLocation } from 'react-router'
+import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
 import type { Category } from '../../types'
@@ -12,6 +13,9 @@ import { SearchBar } from './SearchBar'
 export function Header({ categories }: { categories: Category[] }) {
   const s = useLoadedSettings()
   const { count } = useCart()
+  const { session, profile } = useAuth()
+  const accountLabel = session ? 'Minha conta' : 'Entrar'
+  const firstName = profile?.full_name?.split(' ')[0]
   const [open, setOpen] = useState(false)
   const location = useLocation()
   const cartLabel = s.sales_mode === 'quote' ? 'Orçamento' : 'Carrinho'
@@ -64,8 +68,19 @@ export function Header({ categories }: { categories: Category[] }) {
           </NavLink>
         </nav>
         <Link
+          to={session ? '/minha-conta' : '/entrar'}
+          className="ml-auto flex h-11 min-w-11 items-center justify-center gap-2 rounded-2xl bg-brand-light px-3 text-brand-dark md:ml-0"
+          aria-label={accountLabel}
+          title={accountLabel}
+        >
+          <UserRound className="size-6 shrink-0" />
+          <span className="hidden max-w-28 truncate text-sm font-semibold lg:inline">
+            {session ? (firstName ?? 'Minha conta') : 'Entrar'}
+          </span>
+        </Link>
+        <Link
           to="/carrinho"
-          className="relative ml-auto flex size-11 items-center justify-center rounded-2xl bg-brand-light text-brand-dark md:ml-0"
+          className="relative flex size-11 items-center justify-center rounded-2xl bg-brand-light text-brand-dark"
           aria-label={`${cartLabel} (${count} itens)`}
         >
           <ShoppingCart className="size-6" />
@@ -108,6 +123,12 @@ export function Header({ categories }: { categories: Category[] }) {
               <Link to="/carrinho" className="rounded-xl px-3 py-3 font-semibold text-slate-700 hover:bg-brand-light">
                 {cartLabel}
               </Link>
+              <Link
+                to={session ? '/minha-conta' : '/entrar'}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 font-semibold text-slate-700 hover:bg-brand-light"
+              >
+                <UserRound className="size-5 text-brand" /> {session ? 'Minha conta' : 'Entrar / Criar conta'}
+              </Link>
             </nav>
             {categories.length > 0 && (
               <>
@@ -126,6 +147,12 @@ export function Header({ categories }: { categories: Category[] }) {
                 </nav>
               </>
             )}
+            <Link
+              to="/admin/login"
+              className="mt-auto flex min-h-11 items-center gap-2 border-t border-slate-100 px-3 pt-4 text-sm font-semibold text-slate-500 hover:text-brand"
+            >
+              <Lock className="size-4" /> Acesso da equipe
+            </Link>
           </aside>
         </div>,
           document.body,

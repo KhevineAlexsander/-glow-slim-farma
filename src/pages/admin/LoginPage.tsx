@@ -1,6 +1,6 @@
 import { Lock } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { ErrorBox, PageLoader } from '../../components/ui/misc'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -46,6 +46,15 @@ export default function LoginPage() {
         <button className="btn-primary w-full" disabled={busy}>
           {busy ? 'Entrando…' : 'Entrar'}
         </button>
+        <p className="text-center text-xs text-slate-500">
+          É cliente?{' '}
+          <Link to="/entrar" className="font-semibold text-brand">
+            Entre na sua conta da loja
+          </Link>
+        </p>
+        <Link to="/" className="flex min-h-11 items-center justify-center text-sm font-semibold text-slate-500 hover:text-brand">
+          ← Voltar para a loja
+        </Link>
       </form>
     </div>
   )

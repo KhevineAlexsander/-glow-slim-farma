@@ -8,7 +8,7 @@ import { friendlyError } from '../../lib/supabase'
 import { whatsappLink } from '../../lib/whatsapp'
 import { getOrder, updateOrder } from '../../services/admin'
 import type { Order, OrderItem, OrderStatus, OrderStatusHistory } from '../../types'
-import { formatDateTime, ORDER_STATUS } from './OrdersPage'
+import { formatDateTime, ORDER_STATUS } from '../../lib/orderStatus'
 
 export default function OrderDetailPage() {
   const { id = '' } = useParams()

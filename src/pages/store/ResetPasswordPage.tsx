@@ -1,0 +1,57 @@
+import { KeyRound } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router'
+import { ErrorBox, PageLoader } from '../../components/ui/misc'
+import { useAuth } from '../../contexts/AuthContext'
+import { strongPassword } from '../../lib/password'
+import { supabase } from '../../lib/supabase'
+
+/** Destino do link "Esqueci minha senha": o Supabase abre uma sessão temporária de recuperação. */
+export default function ResetPasswordPage() {
+  const { session, loading } = useAuth()
+  const navigate = useNavigate()
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  if (loading) return <PageLoader />
+
+  if (!session) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-10 text-center">
+        <p className="text-slate-600">Este link expirou ou já foi usado.</p>
+        <Link to="/entrar" className="btn-primary mt-6">Pedir um novo link</Link>
+      </div>
+    )
+  }
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!strongPassword(password)) return setError('A senha precisa ter pelo menos 8 caracteres, com letras e números.')
+    setBusy(true)
+    const { error } = await supabase.auth.updateUser({ password })
+    setBusy(false)
+    if (error) return setError('Não foi possível trocar a senha. Peça um novo link.')
+    navigate('/minha-conta', { replace: true })
+  }
+
+  return (
+    <div className="mx-auto max-w-md px-4 py-8">
+      <form onSubmit={submit} className="card space-y-4 p-5 sm:p-6">
+        <div className="flex items-center gap-3">
+          <span className="flex size-11 items-center justify-center rounded-full bg-brand-light text-brand">
+            <KeyRound className="size-6" />
+          </span>
+          <h1 className="text-xl font-extrabold text-brand-dark">Criar nova senha</h1>
+        </div>
+        <div>
+          <label className="label" htmlFor="password">Nova senha *</label>
+          <input id="password" type="password" className="input" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <p className="mt-1 text-xs text-slate-500">Mínimo de 8 caracteres, com letras e números.</p>
+        </div>
+        {error && <ErrorBox message={error} />}
+        <button className="btn-primary w-full" disabled={busy}>{busy ? 'Salvando…' : 'Salvar nova senha'}</button>
+      </form>
+    </div>
+  )
+}

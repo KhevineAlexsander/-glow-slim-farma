@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseProductsCsv } from './csvImport'
 import { centsToInput, formatBRL, parseBRLToCents } from './money'
 import { effectivePriceCents, productDisplay, type PricingSettings } from './pricing'
+import { strongPassword } from './password'
 import { slugify, uniqueSlug } from './slug'
 import { orderMessage, whatsappLink } from './whatsapp'
 
@@ -70,6 +71,16 @@ describe('pricing', () => {
   it('modo orçamento aceita qualquer produto disponível', () => {
     expect(productDisplay(base, quoteMode).action).toBe('add_to_quote')
     expect(productDisplay({ ...base, is_available: false }, quoteMode).action).toBe('unavailable')
+  })
+})
+
+describe('senha', () => {
+  it('exige 8+ caracteres com letras e números', () => {
+    expect(strongPassword('vanessa@147')).toBe(true)
+    expect(strongPassword('Aa88176895')).toBe(true)
+    expect(strongPassword('12345678')).toBe(false)
+    expect(strongPassword('abcdefgh')).toBe(false)
+    expect(strongPassword('abc123')).toBe(false)
   })
 })
 

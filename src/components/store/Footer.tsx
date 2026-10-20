@@ -136,6 +136,10 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/60">
         © {new Date().getFullYear()} {s.store_name}. Todos os direitos reservados.
+        <span className="mx-2">·</span>
+        <Link to="/admin/login" className="inline-flex min-h-11 items-center hover:text-white hover:underline">
+          Acesso da equipe
+        </Link>
       </div>
     </footer>
   )

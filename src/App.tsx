@@ -15,6 +15,9 @@ import ProductsPage from './pages/store/ProductsPage'
 const ProductPage = lazy(() => import('./pages/store/ProductPage'))
 const CartPage = lazy(() => import('./pages/store/CartPage'))
 const PolicyPage = lazy(() => import('./pages/store/PolicyPage'))
+const SignInPage = lazy(() => import('./pages/store/SignInPage'))
+const AccountPage = lazy(() => import('./pages/store/AccountPage'))
+const ResetPasswordPage = lazy(() => import('./pages/store/ResetPasswordPage'))
 const AdminRoot = lazy(() => import('./pages/admin/AdminRoot'))
 const LoginPage = lazy(() => import('./pages/admin/LoginPage'))
 const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'))
@@ -48,6 +51,9 @@ const router = createBrowserRouter([
           { path: 'produto/:slug', element: <ProductPage /> },
           { path: 'carrinho', element: <CartPage /> },
           { path: 'politicas/:tipo', element: <PolicyPage /> },
+          { path: 'entrar', element: <SignInPage /> },
+          { path: 'minha-conta', element: <AccountPage /> },
+          { path: 'redefinir-senha', element: <ResetPasswordPage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },

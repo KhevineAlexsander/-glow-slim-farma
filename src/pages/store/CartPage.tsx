@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { ProductImage } from '../../components/store/ProductCard'
 import { EmptyState, ErrorBox, PageLoader } from '../../components/ui/misc'
+import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
 import { formatBRL } from '../../lib/money'
@@ -15,8 +16,20 @@ import type { CatalogProduct, PlacedOrder } from '../../types'
 export default function CartPage() {
   const s = useLoadedSettings()
   const { lines, setQuantity, remove, clear } = useCart()
+  const { session, profile } = useAuth()
   const [products, setProducts] = useState<Map<string, CatalogProduct> | null>(null)
   const [form, setForm] = useState({ name: '', phone: '', email: '', city: '', notes: '' })
+
+  // Cliente logado: preenche com os dados da conta (sem apagar o que já foi digitado).
+  useEffect(() => {
+    if (!session) return
+    setForm((f) => ({
+      ...f,
+      name: f.name || profile?.full_name || '',
+      phone: f.phone || profile?.phone || '',
+      email: f.email || session.user.email || '',
+    }))
+  }, [session, profile])
   const [consent, setConsent] = useState(false)
   const [rxAware, setRxAware] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -74,6 +87,11 @@ export default function CartPage() {
           >
             <MessageCircle className="size-5" /> Enviar resumo pelo WhatsApp
           </a>
+        )}
+        {session && (
+          <Link to="/minha-conta" className="btn-outline mt-3 w-full">
+            Acompanhar em Minha conta
+          </Link>
         )}
         <Link to="/produtos" className="btn-outline mt-3 w-full">
           Continuar navegando
@@ -257,6 +275,17 @@ export default function CartPage() {
           )}
 
           {error && <ErrorBox message={error} />}
+          {session ? (
+            <p className="text-xs text-slate-500">Este pedido ficará salvo em Minha conta.</p>
+          ) : (
+            <p className="text-xs text-slate-500">
+              Tem conta?{' '}
+              <Link to="/entrar?voltar=/carrinho" className="font-semibold text-brand">
+                Entre para acompanhar seus pedidos
+              </Link>{' '}
+              (opcional).
+            </p>
+          )}
           <button type="submit" className="btn-primary w-full" disabled={submitting || !validItems.length}>
             {submitting ? 'Enviando…' : isQuote ? 'Enviar solicitação de orçamento' : 'Enviar pedido'}
           </button>

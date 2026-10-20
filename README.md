@@ -11,7 +11,8 @@ sem mexer em código.
 | Loja | Página inicial com banners, categorias, Destaques, Mais Vendidos e Ofertas; busca; listagem com filtro por categoria e ordenação por nome/preço; página do produto; carrinho/lista de orçamento; navegação inferior no celular |
 | Pedidos | O pedido ou orçamento fica registrado no banco, com preços calculados **no servidor**. Depois, o cliente pode enviar o resumo pelo WhatsApp. **Não há pagamento online.** |
 | Painel | Dashboard; produtos (cadastro, edição, várias imagens, arquivar/excluir, **edição de preço direto na lista**, filtros e paginação); categorias; banners; configurações da loja; pedidos com status, histórico e observações; importação CSV |
-| Segurança | RLS em todas as tabelas, permissões verificadas no banco, cadastro público desativado, chave `service_role` nunca usada no frontend |
+| Contas | Login opcional de cliente na loja (cadastro, Minha conta com histórico de pedidos, esqueci a senha); acesso da equipe ao painel em `/admin/login` |
+| Segurança | RLS em todas as tabelas, permissões verificadas no banco, cliente só vê os próprios pedidos, ninguém se promove a admin pela API, chave `service_role` nunca usada no frontend |
 
 ### Regras de negócio garantidas pelo banco
 
@@ -59,10 +60,11 @@ importacao/
      npx supabase db advisors --linked            # deve responder "No issues found"
      ```
    - **SQL Editor:** abra *SQL Editor* e execute **um arquivo por vez, nesta ordem**, o conteúdo de `supabase/migrations/`:
-     `20261018000001_schema.sql` → `20261018000002_security.sql` → `20261018000003_storage_admin_select.sql` →
-     `20261019000004_catalog_security_invoker.sql` → `20261019000005_search_unaccent.sql`.
-3. **Desative o cadastro público:** *Authentication > Sign In / Providers* → desligue **"Allow new users to sign up"**.
-   Mantenha o provedor **Email** ligado, porque é por ele que o administrador entra.
+     todos os arquivos de `supabase/migrations/` **em ordem de nome** (do `20261018000001_…` ao mais recente).
+3. **Login:** em *Authentication > Sign In / Providers*, mantenha o provedor **Email** ligado e
+   **"Allow new users to sign up" ligado** (é o cadastro de clientes da loja; todo cadastro nasce como cliente).
+   Com o e-mail padrão do Supabase (poucos envios por hora), deixe **"Confirm email" desligado**; ao configurar um
+   SMTP próprio em *Authentication > Emails*, ligue a confirmação. Senhas: mínimo 8 caracteres, com letras e números.
 4. Em *Authentication > URL Configuration*, coloque em **Site URL** o endereço do site publicado
    (ex.: `https://glowslimfarma.com.br` ou `https://glow-slim-farma.vercel.app`).
 5. O bucket de imagens `store-images` é criado pela migration: público para leitura e com envio permitido só a administradores.
@@ -76,8 +78,9 @@ importacao/
 2. Abra `supabase/criar-admin.sql`, troque o e-mail e execute no *SQL Editor*.
 3. Acesse `https://SEU-SITE/admin` e entre com esse e-mail e senha.
 
-Todo usuário nasce com a permissão `none`. Só quem tem acesso ao painel do Supabase consegue promover alguém a
-administrador. Um usuário comum não consegue alterar a própria permissão, e isso está coberto pelos testes.
+Todo cadastro (inclusive de clientes pela loja) nasce com a permissão `none`. A coluna `role` não pode ser alterada
+pela API: só quem tem acesso ao painel do Supabase promove alguém a administrador (SQL Editor). Isso está coberto
+pelos testes do banco. A equipe entra pelo link **"Acesso da equipe"** no rodapé/menu da loja ou em `/admin/login`.
 
 **Esqueceu a senha do painel?** No Supabase: *Authentication > Users* → clique no usuário → **Send password recovery**
 (o e-mail padrão do Supabase tem limite de poucos envios por hora; para volume maior configure um SMTP próprio em
@@ -106,7 +109,7 @@ Crie o admin local em <http://127.0.0.1:54323> (Studio): Authentication > Add us
 
 ```bash
 npm test          # regras de preço, dinheiro, CSV, WhatsApp e validação dos CSVs dos catálogos
-npm run test:db   # 41 testes do banco: RLS, preço zero, checkout, prescrição, vitrine, busca, histórico
+npm run test:db   # 54 testes do banco: RLS, preço zero, checkout, prescrição, vitrine, busca, contas de cliente
 npm run build     # checagem de tipos + build de produção
 ```
 
@@ -177,7 +180,7 @@ Os cabeçalhos de segurança do `vercel.json` não se aplicam no Netlify.
 ### Checklist de publicação
 
 - [ ] Migrations aplicadas e Security Advisor sem alertas
-- [ ] Cadastro público desativado no Supabase (Email continua ligado)
+- [ ] Login por e-mail ligado, cadastro de clientes ligado e senhas com letras e números
 - [ ] Primeiro admin criado com `criar-admin.sql`
 - [ ] Variáveis definidas na Vercel (Production e Preview)
 - [ ] Site URL do Supabase igual ao endereço publicado

@@ -154,8 +154,18 @@ export interface Order {
   requires_document_review: boolean
   documents_verified: boolean
   admin_notes: string | null
+  user_id: string | null
   created_at: string
   updated_at: string
+}
+
+/** Perfil do usuário logado (cliente ou admin). */
+export interface Profile {
+  id: string
+  email: string | null
+  full_name: string | null
+  phone: string | null
+  role: 'admin' | 'none'
 }
 
 export interface OrderItem {

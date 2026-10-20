@@ -6,19 +6,8 @@ import { Badge, EmptyState, ErrorBox, Pagination, Spinner } from '../../componen
 import { formatBRL } from '../../lib/money'
 import { friendlyError } from '../../lib/supabase'
 import { listOrders } from '../../services/admin'
+import { formatDateTime, ORDER_STATUS } from '../../lib/orderStatus'
 import type { Order, OrderStatus } from '../../types'
-
-export const ORDER_STATUS: Record<OrderStatus, { label: string; tone: 'blue' | 'amber' | 'green' | 'slate' | 'red' }> = {
-  new: { label: 'Novo', tone: 'blue' },
-  in_review: { label: 'Em atendimento', tone: 'amber' },
-  confirmed: { label: 'Confirmado', tone: 'green' },
-  completed: { label: 'Concluído', tone: 'slate' },
-  cancelled: { label: 'Cancelado', tone: 'red' },
-}
-
-export function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-}
 
 const PAGE_SIZE = 20
 
