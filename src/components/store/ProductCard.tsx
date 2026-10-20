@@ -1,17 +1,22 @@
-import { ImageOff, ShieldAlert } from 'lucide-react'
+import { ShieldAlert } from 'lucide-react'
 import { Link } from 'react-router'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
 import { productDisplay } from '../../lib/pricing'
 import type { CatalogProduct } from '../../types'
 import { ProductAction } from './ProductAction'
+import { VialArt, vialKind } from './VialArt'
 
 export function ProductImage({ product, className = '' }: { product: CatalogProduct; className?: string }) {
   const img = product.images[0]
   if (!img) {
+    // Sem foto: vidro ilustrativo na cor da categoria
     return (
-      <div className={`flex items-center justify-center bg-brand-light/60 text-brand/40 ${className}`}>
-        <ImageOff className="size-10" />
-      </div>
+      <VialArt
+        seed={product.slug}
+        kind={vialKind(`${product.presentation ?? ''} ${product.name}`)}
+        title={`Imagem ilustrativa: ${product.name}`}
+        className={`overflow-hidden ${className}`}
+      />
     )
   }
   return (

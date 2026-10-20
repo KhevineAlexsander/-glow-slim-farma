@@ -36,6 +36,7 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null)
   const [placed, setPlaced] = useState<{ order: PlacedOrder; name: string } | null>(null)
   const isQuote = s.sales_mode === 'quote'
+  const finishOnWhatsApp = s.send_to_whatsapp && Boolean(s.whatsapp_number)
   const idsKey = lines.map((l) => l.productId).sort().join(',')
 
   useEffect(() => {
@@ -68,6 +69,12 @@ export default function CartPage() {
         <p className="mt-2 text-slate-600">
           Número: <strong className="text-brand-dark">#{order.order_number}</strong>
         </p>
+        {finishOnWhatsApp && (
+          <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
+            Abrimos o WhatsApp da loja com o resumo do seu pedido. <strong>Envie a mensagem</strong> para finalizar o
+            atendimento.
+          </p>
+        )}
         <p className="mt-4 text-sm text-slate-600">
           {order.kind === 'order'
             ? 'Seu pedido foi recebido e aguarda confirmação da loja. Nenhum pagamento foi realizado — a loja entrará em contato para combinar pagamento e entrega.'
@@ -85,7 +92,7 @@ export default function CartPage() {
             rel="noopener noreferrer"
             className="btn-whatsapp mt-6 w-full"
           >
-            <MessageCircle className="size-5" /> Enviar resumo pelo WhatsApp
+            <MessageCircle className="size-5" /> Abrir o WhatsApp novamente
           </a>
         )}
         {session && (
@@ -130,16 +137,25 @@ export default function CartPage() {
     if (!consent) return setError('É preciso concordar com o uso dos seus dados para o atendimento.')
     if (hasRestricted && !rxAware) return setError('Confirme a ciência sobre a necessidade de prescrição.')
 
+    // Finalização pelo WhatsApp: a aba é aberta já no toque do botão (senão o navegador
+    // bloqueia o pop-up depois da espera) e recebe o link quando o pedido é registrado.
+    const waTab = finishOnWhatsApp ? window.open('', '_blank') : null
+
     setSubmitting(true)
     try {
       const order = await placeOrder(
         { name: form.name.trim(), phone, email: form.email.trim(), city: form.city.trim(), notes: form.notes.trim() },
         validItems.map((v) => ({ product_id: v.line.productId, quantity: v.line.quantity })),
       )
+      if (finishOnWhatsApp && s.whatsapp_number) {
+        const link = whatsappLink(s.whatsapp_number, orderMessage(s.store_name, order, form.name.trim()))
+        if (waTab) waTab.location.href = link
+      }
       setPlaced({ order, name: form.name.trim() })
       clear()
       window.scrollTo(0, 0)
     } catch (err) {
+      waTab?.close()
       setError(friendlyError(err))
     } finally {
       setSubmitting(false)
@@ -286,8 +302,19 @@ export default function CartPage() {
               (opcional).
             </p>
           )}
-          <button type="submit" className="btn-primary w-full" disabled={submitting || !validItems.length}>
-            {submitting ? 'Enviando…' : isQuote ? 'Enviar solicitação de orçamento' : 'Enviar pedido'}
+          <button
+            type="submit"
+            className={finishOnWhatsApp ? 'btn-whatsapp w-full' : 'btn-primary w-full'}
+            disabled={submitting || !validItems.length}
+          >
+            {finishOnWhatsApp && !submitting && <MessageCircle className="size-5" />}
+            {submitting
+              ? 'Enviando…'
+              : finishOnWhatsApp
+                ? 'Finalizar pelo WhatsApp'
+                : isQuote
+                  ? 'Enviar solicitação de orçamento'
+                  : 'Enviar pedido'}
           </button>
         </form>
       </div>

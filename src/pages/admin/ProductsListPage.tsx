@@ -1,8 +1,9 @@
-import { ImageOff, Plus, Search, ShieldAlert } from 'lucide-react'
+import { Plus, Search, ShieldAlert } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { AdminPageHeader } from '../../components/admin/AdminLayout'
 import { PriceCell } from '../../components/admin/PriceCell'
+import { VialArt, vialKind } from '../../components/store/VialArt'
 import { Badge, EmptyState, ErrorBox, Pagination, Spinner } from '../../components/ui/misc'
 import { useToast } from '../../components/ui/Toast'
 import { friendlyError } from '../../lib/supabase'
@@ -167,7 +168,15 @@ export default function ProductsListPage() {
                 <div key={row.id} className="card flex flex-col gap-3 p-3 md:flex-row md:items-center">
                   <Link to={`/admin/produtos/${row.id}`} className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-50">
-                      {thumb ? <img src={thumb.url} alt="" className="size-full object-contain" /> : <ImageOff className="size-5 text-slate-300" />}
+                      {thumb ? (
+                        <img src={thumb.url} alt="" className="size-full object-contain" />
+                      ) : (
+                        <VialArt
+                          seed={row.slug}
+                          kind={vialKind(`${row.presentation ?? ''} ${row.name}`)}
+                          className="size-full"
+                        />
+                      )}
                     </div>
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-slate-800 hover:text-brand">{row.name}</p>
