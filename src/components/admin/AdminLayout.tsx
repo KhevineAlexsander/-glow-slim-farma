@@ -57,8 +57,8 @@ function AdminLayout() {
           to={to}
           end={end}
           className={({ isActive }) =>
-            `flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm lg:min-h-9 ${
-              isActive ? 'bg-[#e2e8f0] font-medium text-ink' : 'text-muted hover:text-ink'
+            `flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm lg:min-h-9 ${
+              isActive ? 'bg-surface-strong font-medium text-ink' : 'text-muted hover:text-ink'
             }`
           }
         >
@@ -79,10 +79,10 @@ function AdminLayout() {
   const footer = (
     <div className="mt-auto space-y-0.5 pt-4">
       <p className="truncate px-3 pb-1 text-xs text-muted">{session?.user.email}</p>
-      <Link to="/" target="_blank" className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm text-muted hover:text-ink lg:min-h-9">
+      <Link to="/" target="_blank" className="flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm text-muted hover:text-ink lg:min-h-9">
         <ExternalLink className="size-4" strokeWidth={1.75} aria-hidden="true" /> Ver loja
       </Link>
-      <button onClick={() => void signOut()} className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 text-sm text-muted hover:text-red-700 lg:min-h-9">
+      <button onClick={() => void signOut()} className="flex min-h-11 w-full items-center gap-2.5 rounded-full px-3 text-sm text-muted hover:text-red-700 lg:min-h-9">
         <LogOut className="size-4" strokeWidth={1.75} aria-hidden="true" /> Sair
       </button>
     </div>
@@ -91,14 +91,14 @@ function AdminLayout() {
   return (
     // TasteSkill, estilo "framed-sheet": moldura tingida do azul da marca com a barra lateral;
     // o trabalho fica numa folha branca recuada 8px, com linha de 1px e cantos de 16px, sem sombra.
-    <div className="admin min-h-dvh bg-[#f1f4f8] lg:flex">
+    <div className="admin min-h-dvh bg-surface-soft lg:flex">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col p-3 pt-4 lg:flex">
         <div className="mb-5">{brand}</div>
         {nav}
         {footer}
       </aside>
 
-      <header className="sticky top-0 z-30 flex h-12 items-center gap-2 bg-[#f1f4f8] px-2 lg:hidden">
+      <header className="sticky top-0 z-30 flex h-12 items-center gap-2 bg-surface-soft px-2 lg:hidden">
         <button className="btn-ghost size-11 px-0" onClick={() => setOpen(true)} aria-label="Abrir menu">
           <Menu className="size-6" />
         </button>
@@ -109,7 +109,7 @@ function AdminLayout() {
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu do painel">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <aside
-            className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col overflow-y-auto overscroll-contain bg-[#f1f4f8] p-3 shadow-xl"
+            className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col overflow-y-auto overscroll-contain bg-surface-soft p-3 shadow-xl"
             onClick={(e) => {
               if ((e.target as HTMLElement).closest('a')) setOpen(false)
             }}
@@ -126,7 +126,7 @@ function AdminLayout() {
         </div>
       )}
 
-      <main className="min-w-0 flex-1 bg-white p-4 sm:p-6 lg:my-2 lg:mr-2 lg:min-h-[calc(100dvh-1rem)] lg:rounded-[10px] lg:border lg:border-[#e6e9ee]">
+      <main className="min-w-0 flex-1 bg-white p-4 sm:p-6 lg:my-2 lg:mr-2 lg:min-h-[calc(100dvh-1rem)] lg:rounded-3xl lg:border lg:border-hairline">
         <Suspense fallback={<PageLoader />}>
           <Outlet />
         </Suspense>

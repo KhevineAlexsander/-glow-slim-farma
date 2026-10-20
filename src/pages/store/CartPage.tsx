@@ -66,9 +66,9 @@ export default function CartPage() {
     const { order, name } = placed
     const waText = orderMessage(s.store_name, order, name)
     return (
-      <div className="mx-auto max-w-2xl px-(--margin) py-12">
+      <div className="mx-auto max-w-2xl px-(--gutter) py-12">
         <CheckCircle2 className="size-10 text-[#247b50]" aria-hidden="true" />
-        <h1 className="mt-4 text-2xl font-semibold text-ink">
+        <h1 className="display-md mt-4 text-ink">
           {order.kind === 'order' ? 'Pedido registrado' : 'Solicitação de orçamento registrada'}
         </h1>
         <p className="mt-1 text-muted">
@@ -127,17 +127,17 @@ export default function CartPage() {
     // Vazio: mantém o título e oferece os grupos como próximo passo
     const groups = buildCategoryTree(categories)
     return (
-      <div className="wrap py-8">
-        <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+      <div className="wrap py-10 lg:py-14">
+        <h1 className="display-md text-ink">{title}</h1>
         <p className="mt-1 text-sm text-muted">
           {isQuote ? 'Sua lista de orçamento está vazia.' : 'Seu carrinho está vazio.'}
         </p>
         {groups.length > 0 && (
           <nav className="mt-8" aria-label="Grupos de produtos">
             <h2 className="text-base font-medium text-ink">Comece por um grupo</h2>
-            <ul className="mt-3 grid border-t border-[#e8e8e8] sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-3">
+            <ul className="mt-3 grid border-t border-hairline sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-3">
               {groups.map(({ group }, index) => (
-                <li key={group.id} className="border-b border-[#e8e8e8]">
+                <li key={group.id} className="border-b border-hairline">
                   <Link
                     to={`/produtos?categoria=${group.slug}`}
                     className="flex min-h-14 items-center gap-3 text-ink hover:underline"
@@ -197,8 +197,8 @@ export default function CartPage() {
   }
 
   return (
-    <div className="wrap py-8">
-      <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+    <div className="wrap py-10 lg:py-14">
+      <h1 className="display-md text-ink">{title}</h1>
       <p className="mt-1 text-sm text-muted">
         {itemCount} {itemCount === 1 ? 'item' : 'itens'}
         {hasRestricted ? ' · alguns exigem prescrição/avaliação' : ''}
@@ -223,9 +223,9 @@ export default function CartPage() {
           )}
 
           {/* Itens: linhas finas, valor de cada linha alinhado à direita */}
-          <ul className="border-t border-[#e8e8e8]">
+          <ul className="border-t border-hairline">
             {view.map(({ line, product, valid, unit }) => (
-              <li key={line.productId} className="flex gap-4 border-b border-[#e8e8e8] py-4">
+              <li key={line.productId} className="flex gap-4 border-b border-hairline py-4">
                 {product ? (
                   <Link to={`/produto/${product.slug}`} className="shrink-0" tabIndex={-1} aria-hidden="true">
                     <ProductImage product={product} className="size-20 sm:size-24" />
@@ -262,9 +262,9 @@ export default function CartPage() {
                   </div>
                   <div className="mt-auto flex items-center justify-between gap-2 pt-3">
                     {valid ? (
-                      <div className="flex h-11 items-center border border-[#cbd5e1]">
+                      <div className="flex h-11 items-center rounded-full bg-surface-strong">
                         <button
-                          className="flex size-11 items-center justify-center text-ink hover:bg-[#f1f5f9]"
+                          className="flex size-11 items-center justify-center rounded-full text-ink hover:bg-hairline"
                           onClick={() =>
                             line.quantity <= 1 ? remove(line.productId) : setQuantity(line.productId, line.quantity - 1)
                           }
@@ -274,7 +274,7 @@ export default function CartPage() {
                         </button>
                         <span className="tabular w-8 text-center text-sm font-medium text-ink">{line.quantity}</span>
                         <button
-                          className="flex size-11 items-center justify-center text-ink hover:bg-[#f1f5f9]"
+                          className="flex size-11 items-center justify-center rounded-full text-ink hover:bg-hairline"
                           onClick={() => setQuantity(line.productId, line.quantity + 1)}
                           aria-label="Aumentar"
                         >
@@ -298,8 +298,8 @@ export default function CartPage() {
           </ul>
         </div>
 
-        <form onSubmit={submit} className="card space-y-4 p-5 lg:sticky lg:top-28">
-          <div className="border-b border-[#dde3ea] pb-4">
+        <form onSubmit={submit} className="card space-y-4 p-6 lg:sticky lg:top-24">
+          <div className="border-b border-hairline pb-4">
             <div className="flex items-baseline justify-between gap-3 text-sm text-ink">
               <span>{hasUnpriced ? 'Subtotal (itens com preço)' : 'Total estimado'}</span>
               <span className="tabular text-base font-semibold">

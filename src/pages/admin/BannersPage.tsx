@@ -138,7 +138,7 @@ export default function BannersPage() {
         <div className="space-y-2">
           {list.map((b) => (
             <div key={b.id} className={`card flex items-center gap-3 p-3 ${b.is_active ? '' : 'opacity-60'}`}>
-              <div className="flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f1f5f9]">
+              <div className="flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-strong">
                 {b.image_url && <img src={b.image_url} alt="" className="h-full w-full object-contain" />}
               </div>
               <div className="min-w-0 flex-1">

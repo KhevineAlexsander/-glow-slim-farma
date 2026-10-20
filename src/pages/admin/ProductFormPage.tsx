@@ -359,7 +359,7 @@ export default function ProductFormPage() {
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#e8e8e8] bg-white p-3 lg:right-[9px] lg:bottom-[9px] lg:left-[241px] lg:rounded-b-2xl">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-hairline bg-white p-3 lg:right-[9px] lg:bottom-[9px] lg:left-[241px] lg:rounded-b-3xl">
         <div className="mx-auto flex max-w-4xl items-center gap-3">
           {error && <p className="flex-1 text-sm text-red-600">{error}</p>}
           <button type="submit" className="btn-primary ml-auto min-w-40" disabled={saving}>

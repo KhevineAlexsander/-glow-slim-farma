@@ -40,14 +40,14 @@ export function PriceBlock({ product, size = 'sm' }: { product: CatalogProduct; 
     return (
       <div>
         {d.oldPrice && <p className="tabular text-xs text-muted line-through">{d.oldPrice}</p>}
-        <p className={`tabular font-semibold whitespace-nowrap text-ink ${size === 'lg' ? 't-lead' : 'text-base'}`}>{d.price}</p>
+        <p className={`tabular font-medium whitespace-nowrap text-ink ${size === 'lg' ? 'title-lg' : 'text-lg'}`}>{d.price}</p>
       </div>
     )
   }
   return (
     <p
       className={`flex items-start gap-1 font-medium ${d.restricted ? 'text-amber-800' : 'text-brand-dark'} ${
-        size === 'lg' ? 'text-lg' : 'text-xs leading-tight'
+        size === 'lg' ? 'text-lg' : 'text-sm leading-snug'
       }`}
     >
       {d.restricted && <ShieldAlert className={`shrink-0 ${size === 'lg' ? 'mt-1 size-5' : 'size-4'}`} aria-hidden="true" />}
@@ -58,38 +58,36 @@ export function PriceBlock({ product, size = 'sm' }: { product: CatalogProduct; 
 }
 
 /**
- * Card de produto: foto (ou frasco na cor do grupo), nome em duas linhas fixas, a
- * categoria, e no pé o preço e a ação. As alturas fixas fazem todos os cards de uma
- * fileira terminarem na mesma linha.
+ * Card de produto (card claro do sistema): branco, linha de 1px, cantos de 24px; a foto
+ * (ou o frasco na cor do grupo) numa placa de 16px; nome em duas linhas fixas, categoria,
+ * preço em algarismos tabulares e a ação em pílula. Alturas fixas alinham a fileira.
  */
-export function ProductCard({ product, tone = 'surface' }: { product: CatalogProduct; tone?: 'surface' | 'white' }) {
+export function ProductCard({ product }: { product: CatalogProduct; tone?: 'surface' | 'white' }) {
   const s = useLoadedSettings()
   const d = productDisplay(product, s)
   const url = `/produto/${product.slug}`
 
   return (
-    <article className={`relative flex h-full flex-col ${tone === 'white' ? 'bg-white' : 'bg-[#f4f7fb]'}`}>
+    <article className="card card-hover relative flex h-full flex-col p-2.5 sm:p-3">
       {d.discountPercent != null && d.discountPercent > 0 && (
-        <span className="tabular absolute top-0 left-0 z-10 bg-ink px-2 py-1 text-xs font-medium text-white">
+        <span className="tabular absolute top-5 left-5 z-10 rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-white">
           -{d.discountPercent}%
         </span>
       )}
-      <Link to={url} className="block" tabIndex={-1} aria-hidden="true">
+      <Link to={url} className="block overflow-hidden rounded-2xl" tabIndex={-1} aria-hidden="true">
         <ProductImage product={product} className="aspect-square w-full" />
       </Link>
-      <div className="flex flex-1 flex-col p-3">
-        <h3 className="text-sm font-medium text-ink">
+      <div className="flex flex-1 flex-col px-1.5 pt-3 pb-1.5 sm:px-2">
+        <h3 className="text-base font-semibold text-ink">
           {/* o link ocupa as duas linhas reservadas: área de toque de 48px */}
-          <Link to={url} className="line-clamp-2 min-h-[2lh] hover:underline">
+          <Link to={url} className="line-clamp-2 min-h-[3em] leading-normal hover:underline">
             {product.name}
           </Link>
         </h3>
-        <p className="mt-1 line-clamp-1 text-xs text-muted">
-          {product.category_name ?? ' '}
-        </p>
+        <p className="mt-0.5 line-clamp-1 text-sm text-body">{product.category_name ?? ' '}</p>
         <div className="mt-auto pt-3">
           <PriceBlock product={product} />
-          <div className="mt-2">
+          <div className="mt-3">
             <ProductAction product={product} compact />
           </div>
         </div>

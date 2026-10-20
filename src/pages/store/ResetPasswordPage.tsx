@@ -17,7 +17,7 @@ export default function ResetPasswordPage() {
 
   if (!session) {
     return (
-      <div className="mx-auto max-w-md px-(--margin) py-12 text-center">
+      <div className="mx-auto max-w-md px-(--gutter) py-12 text-center">
         <p className="text-muted">Este link expirou ou já foi usado.</p>
         <Link to="/entrar" className="btn-primary mt-6">Pedir um novo link</Link>
       </div>
@@ -35,10 +35,10 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-(--margin) py-12">
-      <form onSubmit={submit} className="space-y-4">
+    <div className="mx-auto max-w-md px-(--gutter) py-12">
+      <form onSubmit={submit} className="card space-y-4 p-6 sm:p-8">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold text-ink">Criar nova senha</h1>
+          <h1 className="title-lg text-ink">Criar nova senha</h1>
         </div>
         <div>
           <label className="label" htmlFor="password">Nova senha *</label>

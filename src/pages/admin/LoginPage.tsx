@@ -28,7 +28,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="bg-soft-gradient flex min-h-dvh items-center justify-center p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-surface-soft p-4">
       <form onSubmit={submit} className="card w-full max-w-sm space-y-4 p-6">
         <img src="/logo.svg" alt="Glow Slim Farma" className="mx-auto h-14 w-auto" />
         <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-600">

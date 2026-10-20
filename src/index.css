@@ -1,50 +1,61 @@
 @import 'tailwindcss';
 
 /*
- * Glow Slim Farma — direção "palco dividido" (TasteSkill), paleta da marca mantida.
- * Regras da casa: sem gradientes, sem sombras em repouso, sem linhas finas decorativas,
- * texto corrido >= 16px e nada legível abaixo de 13px. Superfícies separadas por tom.
+ * Glow Slim Farma — sistema visual baseado no DESIGN.md "Coinbase" (awesome-claude-design),
+ * adaptado à marca: um único azul de ação (o azul escuro da marca, editável no painel),
+ * fundo branco, faixas cinza-claras e faixas escuras editoriais, títulos grandes em peso
+ * 400 com tracking negativo, botões em pílula, cards de 24px, campos de 12px e uma única
+ * sombra (só no hover). Fonte: Inter (substituta indicada no próprio DESIGN.md).
  * As cores da marca vêm de store_settings e são aplicadas em runtime (SettingsProvider).
  */
 :root {
-  --brand: #1677f2; /* acento: a ação */
-  --brand-dark: #0756b5; /* campo profundo do topo e do contato */
+  --brand: #1677f2; /* azul claro da marca (logo, ilustrações) */
+  --brand-dark: #0756b5; /* a cor de ação: botões principais e links */
   --accent: #22a9e8;
-  --brand-light: #eaf8ff; /* superfície: um degrau de tom do fundo */
+  --brand-light: #eaf8ff;
 
-  --ground: #ffffff;
-  --ink: #0b1a2e;
-  --muted: #475569; /* 7.5:1 no branco */
-  --deep-ink: #ffffff; /* tinta sobre o campo profundo */
+  --ink: #0a0b0d; /* títulos, navegação, texto forte */
+  --body: #5b616e; /* texto corrido (6.4:1 no branco) */
+  --muted: #5b616e; /* rótulos e legendas: mesmo tom para manter AA */
+  --hairline: #dee1e6;
+  --surface-soft: #f7f7f7; /* faixas alternadas */
+  --surface-strong: #eef0f3; /* botões secundários, busca, placas de ícone */
+  --dark: #0a0b0d; /* faixas escuras editoriais */
+  --dark-elevated: #16181c; /* cards sobre a faixa escura */
+  --on-dark-soft: #a8acb3; /* texto secundário no escuro (8:1) */
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
-  --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
   --t-press: 140ms;
   --t-hover: 180ms;
-  --t-ui: 240ms;
-  --t-reveal: 800ms;
 
-  --margin: clamp(1rem, 2.2vw, 2rem);
+  --gutter: clamp(1rem, 3vw, 1.5rem);
 }
 
 @theme inline {
-  --font-sans: 'Switzer', 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Inter', -apple-system, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
   --color-accent: var(--accent);
   --color-brand-light: var(--brand-light);
   --color-ink: var(--ink);
+  --color-body: var(--body);
   --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-strong: var(--surface-strong);
+  --color-dark: var(--dark);
+  --color-dark-elevated: var(--dark-elevated);
+  --color-on-dark-soft: var(--on-dark-soft);
 
-  /* Escala com poucos tamanhos, bem separados (piso de 13px) */
-  --text-xs: 0.8125rem; /* 13px */
-  --text-xs--line-height: 1.45;
-  --text-sm: 1rem; /* 16px */
+  /* Escala do sistema: legenda 13 · corpo pequeno 14 · corpo 16 · título 18 */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.875rem;
   --text-sm--line-height: 1.5;
-  --text-base: 1.125rem; /* 18px — texto corrido */
+  --text-base: 1rem;
   --text-base--line-height: 1.5;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.33;
 }
 
 html {
@@ -54,10 +65,9 @@ html {
 body {
   @apply bg-white antialiased;
   color: var(--ink);
-  font-size: 1.125rem;
+  font-size: 1rem;
   line-height: 1.5;
-  letter-spacing: -0.01em;
-  font-kerning: normal;
+  font-feature-settings: 'cv11', 'ss01';
   /* Palavras/URLs longas quebram em vez de empurrar o layout para fora da tela */
   overflow-wrap: break-word;
 }
@@ -65,17 +75,16 @@ body {
 h1,
 h2,
 h3 {
-  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
 ::selection {
-  background: var(--brand);
+  background: var(--brand-dark);
   color: #fff;
 }
 
 :focus-visible {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--brand-dark);
   outline-offset: 2px;
 }
 
@@ -93,211 +102,176 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-/* Campos sem cor de fundo de marca: o campo profundo e a superfície clara são chapados */
-.bg-brand-gradient {
-  background-color: var(--brand-dark);
+/* Contêiner editorial: até 1200px de conteúdo, centralizado */
+@utility wrap {
+  width: 100%;
+  max-width: calc(1200px + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
 }
 
-.bg-soft-gradient {
-  background-color: var(--ground);
+/* Ritmo de seção: 96px no desktop */
+@utility section-y {
+  padding-block: 4rem;
+  @media (min-width: 1024px) {
+    padding-block: 6rem;
+  }
 }
 
-/* Componentes básicos reutilizados no site e no painel */
+/* Botões: todos em pílula; 44px de altura (56px na versão grande do topo) */
 @utility btn {
-  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-base font-semibold disabled:cursor-not-allowed;
   transition:
     transform var(--t-press) var(--ease-out),
     background-color var(--t-hover) ease,
     color var(--t-hover) ease;
   &:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: scale(0.98);
   }
 }
 
 @layer components {
-  .btn-primary {
-    /* azul escuro da marca: o branco passa 4.5:1 (o azul claro dava 4.2:1) */
-    @apply btn bg-brand-dark text-white;
+  /* Tipografia de display: peso 400, tracking negativo (só nos títulos grandes) */
+  .display-mega {
+    font-size: clamp(2.5rem, 1.4rem + 4.4vw, 5rem); /* 40 → 80px */
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.025em;
   }
+  .display-lg {
+    font-size: clamp(2rem, 1.5rem + 2vw, 3.25rem); /* 32 → 52px */
+    font-weight: 400;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+  }
+  .display-md {
+    font-size: clamp(1.875rem, 1.4rem + 1.6vw, 2.75rem); /* 30 → 44px */
+    font-weight: 400;
+    line-height: 1.09;
+    letter-spacing: -0.022em;
+  }
+  .title-lg {
+    font-size: clamp(1.5rem, 1.3rem + 0.6vw, 2rem); /* 24 → 32px */
+    font-weight: 400;
+    line-height: 1.13;
+    letter-spacing: -0.0125em;
+  }
+
+  /* Rótulo de seção em pílula (badge-pill) */
+  .badge-pill {
+    @apply inline-flex items-center rounded-full bg-surface-strong px-3 py-1 text-xs font-semibold tracking-wide text-ink uppercase;
+  }
+
+  .btn-primary {
+    @apply btn bg-brand-dark text-white disabled:bg-[#a8b8cc];
+  }
+  .btn-lg {
+    @apply min-h-14 px-8;
+  }
+  /* secundário claro: cinza do sistema com texto escuro */
   .btn-outline {
-    @apply btn bg-brand-light text-brand-dark;
+    @apply btn bg-surface-strong text-ink disabled:text-[#a8acb3];
   }
   .btn-ghost {
-    @apply btn text-muted;
+    @apply btn text-body;
   }
   .btn-danger {
-    @apply btn bg-red-700 text-white;
+    @apply btn bg-[#cf202f] text-white;
   }
+  /* WhatsApp segue a cor única de ação (o ícone identifica o canal) */
   .btn-whatsapp {
-    /* verde escuro para o texto branco passar 4.5:1 */
-    @apply btn bg-[#0b7a3b] text-white;
+    @apply btn bg-brand-dark text-white disabled:bg-[#a8b8cc];
+  }
+  /* sobre faixas escuras */
+  .btn-on-dark {
+    @apply btn bg-white text-ink;
+  }
+  .btn-outline-on-dark {
+    @apply btn text-white;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.7);
   }
   .input {
-    @apply min-h-11 w-full rounded-none bg-[#f1f5f9] px-3 text-base outline-none placeholder:text-[#64748b] sm:text-sm;
+    @apply min-h-12 w-full rounded-xl bg-white px-4 text-base outline-none placeholder:text-[#7c828a];
     color: var(--ink);
-    border: 1px solid transparent; /* taste-skill-ignore: campo de formulário, a linha só aparece no foco */
-    transition: border-color var(--t-hover) ease, background-color var(--t-hover) ease;
+    border: 1px solid var(--hairline);
+    transition:
+      border-color var(--t-hover) ease,
+      box-shadow var(--t-hover) ease;
     &:focus {
-      background: #fff;
-      border-color: var(--brand);
+      border-color: var(--brand-dark);
+      box-shadow: inset 0 0 0 1px var(--brand-dark); /* borda de 2px no foco */
     }
   }
   .label {
-    @apply mb-1 block text-sm font-medium;
+    @apply mb-1.5 block text-sm font-semibold;
     color: var(--ink);
   }
-  /* Painel: um degrau de tom do fundo, sem linha nem sombra */
+  /* Card do sistema: branco, linha de 1px, cantos de 24px */
   .card {
-    @apply rounded-none bg-[#f4f7fb];
+    @apply rounded-3xl border border-hairline bg-white;
+  }
+  .card-hover {
+    transition: box-shadow var(--t-hover) ease;
   }
 
-  /* Painel administrativo (TasteSkill, telas de app, estilo framed-sheet): na folha
-     branca, cards com linha de 1px e cantos de 10px; controles de 8px; o botão
-     principal em quase-preto e o secundário branco com linha. Os utilitários ainda
-     vencem estas regras (ficam numa camada acima). */
+  /* Painel administrativo: mesma linguagem, mais compacta (cards de 16px) */
   .admin .card {
-    background: #fff;
-    border: 1px solid #e8e8e8; /* taste-skill-ignore: painel de tela de app (regras de app-screens) */
-    border-radius: 10px;
-  }
-  .admin .input {
-    background: #fff;
-    border-color: #d1d5db;
-    border-radius: 8px;
-    &:focus {
-      border-color: var(--ink);
-    }
-  }
-  .admin .btn-primary,
-  .admin .btn-outline,
-  .admin .btn-ghost,
-  .admin .btn-danger,
-  .admin .btn-whatsapp {
-    border-radius: 8px;
-  }
-  .admin .btn-primary {
-    background-color: #1d1f20;
-  }
-  .admin .btn-outline {
-    background-color: #fff;
-    color: var(--ink);
-    box-shadow: inset 0 0 0 1px #d1d5db; /* taste-skill-ignore: contorno do botão secundário do painel, não é sombra */
+    border-radius: 1rem;
   }
   @media (min-width: 1024px) {
     .admin .btn-primary,
     .admin .btn-outline,
     .admin .btn-ghost,
     .admin .btn-danger {
-      min-height: 2.25rem;
-      padding-inline: 0.875rem;
+      min-height: 2.5rem;
+      padding-inline: 1rem;
+      font-size: 0.875rem;
     }
     .admin .input {
-      min-height: 2.5rem;
+      min-height: 2.75rem;
     }
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover {
-    background-color: #064a9e;
+  .btn-primary:hover:not(:disabled),
+  .btn-whatsapp:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--brand-dark) 80%, black);
   }
-  .btn-outline:hover {
-    background-color: #d6effc;
-  }
-  .admin .btn-primary:hover {
-    background-color: #000;
-  }
-  .admin .btn-outline:hover {
-    background-color: #f6f8fb;
+  .btn-outline:hover:not(:disabled) {
+    background-color: var(--hairline);
   }
   .btn-ghost:hover {
-    background-color: #f1f5f9;
+    background-color: var(--surface-strong);
     color: var(--ink);
   }
-  .btn-whatsapp:hover {
-    background-color: #08662f;
-  }
   .btn-danger:hover {
-    background-color: #991b1b;
+    background-color: #a51a26;
+  }
+  .btn-on-dark:hover {
+    background-color: var(--surface-strong);
+  }
+  .btn-outline-on-dark:hover {
+    background-color: var(--dark-elevated);
+  }
+  /* a única sombra do sistema */
+  .card-hover:hover {
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.04);
   }
 }
 
-/* ---------------------------------------------------------------------------
- * Movimento: conteúdo sempre visível sem JS (gate html.js) e com reduced-motion.
- * ------------------------------------------------------------------------- */
+/* Entrada suave ao rolar; conteúdo sempre visível sem JS e com reduced-motion */
 @media (prefers-reduced-motion: no-preference) {
   .js [data-reveal] {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(16px);
     transition:
-      opacity 700ms var(--ease-out),
-      transform 900ms var(--ease-out);
-    transition-delay: calc(var(--i, 0) * 80ms);
+      opacity 600ms var(--ease-out),
+      transform 700ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 70ms);
   }
   .js [data-reveal].is-in {
     opacity: 1;
     transform: none;
   }
-  .js .load-rise {
-    opacity: 0;
-    transform: translateY(14px);
-    animation: load-rise 600ms var(--ease-out) forwards;
-    animation-delay: var(--d, 0ms);
-  }
-}
-@keyframes load-rise {
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Movimento ligado à rolagem (sem JS); estático onde não há suporte */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .scroll-shrink {
-      animation: scroll-shrink linear both;
-      animation-timeline: view();
-      animation-range: exit 0% exit 100%;
-      transform-origin: left bottom;
-    }
-    .scroll-drift {
-      animation: scroll-drift linear both;
-      animation-timeline: view();
-      animation-range: entry 0% exit 100%;
-    }
-  }
-}
-@keyframes scroll-shrink {
-  to {
-    transform: scale(0.93);
-  }
-}
-@keyframes scroll-drift {
-  from {
-    transform: translateY(-4%) scale(1.08);
-  }
-  to {
-    transform: translateY(4%) scale(1.08);
-  }
-}
-
-/* Um único par de margens para a loja inteira (cabeçalho, seções e rodapé) */
-@utility wrap {
-  width: 100%;
-  max-width: 1760px;
-  margin-inline: auto;
-  padding-inline: var(--margin);
-}
-
-/* Escala da página inicial: poucos tamanhos, bem separados (TasteSkill) */
-.t-head {
-  font-size: clamp(2rem, 1.3rem + 3.2vw, 4rem);
-  line-height: 1;
-  letter-spacing: -0.035em;
-}
-.t-lead {
-  font-size: clamp(1.375rem, 1.1rem + 0.9vw, 1.75rem);
-  line-height: 1.25;
-  letter-spacing: -0.02em;
 }

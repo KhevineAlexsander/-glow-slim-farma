@@ -41,22 +41,22 @@ export function Header({ categories }: { categories: Category[] }) {
   }, [open])
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
-    `text-sm font-medium transition-colors ${isActive ? 'text-ink underline' : 'text-muted hover:text-ink'}`
+    `inline-flex h-11 items-center text-sm font-medium transition-colors ${isActive ? 'text-ink' : 'text-body hover:text-ink'}`
   const iconButton =
-    'relative flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-2 text-ink transition-colors hover:bg-[#f1f5f9]'
+    'relative flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-2 text-ink transition-colors hover:bg-surface-strong'
 
   return (
-    <header className="sticky top-0 z-40 bg-white">
+    // Barra de navegação clara do sistema: 64px, branca, linha de 1px embaixo
+    <header className="sticky top-0 z-40 border-b border-hairline bg-white">
       {s.announcement_active && s.announcement_text && (
-        <div className="bg-brand-dark px-4 py-2 text-center text-sm font-medium text-white">{s.announcement_text}</div>
+        <div className="bg-dark px-4 py-2 text-center text-sm font-medium text-white">{s.announcement_text}</div>
       )}
-      <div className="wrap flex items-center gap-2 py-3 sm:gap-3">
+      <div className="wrap flex h-16 items-center gap-2 sm:gap-3">
         <button className={`${iconButton} md:hidden`} onClick={() => setOpen(true)} aria-label="Abrir menu">
           <Menu className="size-6" />
         </button>
-        <Logo className="h-10 sm:h-12" />
-        <SearchBar className="mx-4 hidden flex-1 md:block" />
-        <nav className="hidden items-center gap-6 lg:flex">
+        <Logo className="h-9 sm:h-10" />
+        <nav className="ml-6 hidden items-center gap-6 lg:flex">
           <NavLink to="/" end className={navClass}>
             Início
           </NavLink>
@@ -64,22 +64,23 @@ export function Header({ categories }: { categories: Category[] }) {
             Produtos
           </NavLink>
         </nav>
+        <SearchBar className="mx-2 hidden max-w-md flex-1 md:ml-auto md:block" />
         <Link
           to={session ? '/minha-conta' : '/entrar'}
           className={`${iconButton} ml-auto md:ml-0`}
           aria-label={accountLabel}
           title={accountLabel}
         >
-          <UserRound className="size-6 shrink-0" />
+          <UserRound className="size-5 shrink-0" />
           <span className="hidden max-w-28 truncate text-sm font-medium lg:inline">
             {session ? (firstName ?? 'Minha conta') : 'Entrar'}
           </span>
         </Link>
         <Link to="/carrinho" className={iconButton} aria-label={`${cartLabel} (${count} itens)`}
         >
-          <ShoppingCart className="size-6" />
+          <ShoppingCart className="size-5" />
           {count > 0 && (
-            <span className="tabular absolute top-0.5 right-0 flex min-w-5 items-center justify-center rounded-full bg-ink px-1 text-xs font-semibold text-white">
+            <span className="tabular absolute top-0.5 right-0 flex min-w-5 items-center justify-center rounded-full bg-brand-dark px-1 text-xs font-semibold text-white">
               {count > 99 ? '99+' : count}
             </span>
           )}
@@ -108,18 +109,18 @@ export function Header({ categories }: { categories: Category[] }) {
               </button>
             </div>
             <nav className="flex flex-col gap-1">
-              <Link to="/" className="px-3 py-3 font-medium text-ink hover:bg-[#f1f5f9]">
+              <Link to="/" className="px-3 py-3 font-medium text-ink hover:bg-surface-strong">
                 Início
               </Link>
-              <Link to="/produtos" className="px-3 py-3 font-medium text-ink hover:bg-[#f1f5f9]">
+              <Link to="/produtos" className="px-3 py-3 font-medium text-ink hover:bg-surface-strong">
                 Todos os produtos
               </Link>
-              <Link to="/carrinho" className="px-3 py-3 font-medium text-ink hover:bg-[#f1f5f9]">
+              <Link to="/carrinho" className="px-3 py-3 font-medium text-ink hover:bg-surface-strong">
                 {cartLabel}
               </Link>
               <Link
                 to={session ? '/minha-conta' : '/entrar'}
-                className="flex items-center gap-3 px-3 py-3 font-medium text-ink hover:bg-[#f1f5f9]"
+                className="flex items-center gap-3 px-3 py-3 font-medium text-ink hover:bg-surface-strong"
               >
                 <UserRound className="size-5 text-muted" /> {session ? 'Minha conta' : 'Entrar / Criar conta'}
               </Link>
@@ -132,7 +133,7 @@ export function Header({ categories }: { categories: Category[] }) {
                     <Link
                       key={c.id}
                       to={`/produtos?categoria=${c.slug}`}
-                      className="flex items-center gap-3 px-3 py-2.5 text-ink hover:bg-[#f1f5f9]"
+                      className="flex items-center gap-3 px-3 py-2.5 text-ink hover:bg-surface-strong"
                     >
                       {/* a bolinha é a cor dos frascos do grupo */}
                       <span

@@ -66,7 +66,7 @@ export default function OrdersPage() {
         <>
           <div className="space-y-2">
             {data.rows.map((o) => (
-              <Link key={o.id} to={`/admin/pedidos/${o.id}`} className="card flex flex-col gap-2 p-4 hover:border-[#cbd5e1] sm:flex-row sm:items-center sm:gap-3">
+              <Link key={o.id} to={`/admin/pedidos/${o.id}`} className="card flex flex-col gap-2 p-4 hover:border-hairline sm:flex-row sm:items-center sm:gap-3">
                 <div className="min-w-0 sm:flex-1">
                   <p className="font-bold text-ink">
                     #{o.order_number} · {o.customer_name}

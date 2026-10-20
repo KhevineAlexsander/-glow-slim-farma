@@ -213,7 +213,7 @@ export default function ProductsListPage() {
                       <button
                         onClick={() => void toggleStatus(row)}
                         className={`h-10 rounded-lg px-3 text-xs font-medium ${
-                          row.status === 'published' ? 'text-muted hover:text-ink' : 'border border-[#d1d5db] bg-white text-ink hover:border-ink'
+                          row.status === 'published' ? 'text-muted hover:text-ink' : 'border border-hairline bg-white text-ink hover:border-ink'
                         }`}
                       >
                         {row.status === 'published' ? 'Ocultar' : 'Publicar'}

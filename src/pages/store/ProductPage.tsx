@@ -35,7 +35,7 @@ export default function ProductPage() {
   if (product === null) {
     return (
       <div className="wrap py-8">
-        <h1 className="mb-6 text-2xl font-semibold text-ink">Produto não encontrado</h1>
+        <h1 className="display-md mb-6 text-ink">Produto não encontrado</h1>
         <EmptyState title="Ele pode ter sido removido ou ainda não foi publicado.">
           <Link to="/produtos" className="font-medium text-ink underline">
             Ver produtos
@@ -67,7 +67,7 @@ export default function ProductPage() {
   ]
 
   return (
-    <div className="wrap py-4 sm:py-8">
+    <div className="wrap py-6 lg:py-10">
       <nav aria-label="Você está em" className="mb-4">
         <ol className="flex flex-wrap items-center gap-x-1 text-sm text-muted">
           {crumbs.map((c, i) => (
@@ -87,10 +87,10 @@ export default function ProductPage() {
             <img
               src={mainImage.url}
               alt={mainImage.alt || product.name}
-              className="aspect-square w-full bg-white object-contain"
+              className="aspect-square w-full rounded-3xl border border-hairline bg-white object-contain"
             />
           ) : (
-            <ProductImage product={product} className="aspect-square w-full" />
+            <ProductImage product={product} className="aspect-square w-full rounded-3xl" />
           )}
           {product.images.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto">
@@ -98,7 +98,7 @@ export default function ProductPage() {
                 <button
                   key={img.url}
                   onClick={() => setImageIndex(i)}
-                  className={`size-16 shrink-0 overflow-hidden border-2 bg-white ${
+                  className={`size-16 shrink-0 overflow-hidden rounded-xl border-2 bg-white ${
                     i === imageIndex ? 'border-ink' : 'border-transparent'
                   }`}
                   aria-label={`Imagem ${i + 1}`}
@@ -111,7 +111,7 @@ export default function ProductPage() {
         </div>
 
         <div>
-          <h1 className="text-2xl font-semibold text-balance text-ink sm:text-3xl">{product.name}</h1>
+          <h1 className="title-lg text-ink lg:text-[2.25rem] lg:leading-[1.11]">{product.name}</h1>
           {product.short_description && <p className="mt-2 text-muted">{product.short_description}</p>}
 
           <div className="mt-5">
@@ -124,7 +124,7 @@ export default function ProductPage() {
           </div>
 
           {d.restricted && (
-            <div className="mt-4 flex gap-2 bg-[#fffbeb] p-3 text-sm text-[#92400e]">
+            <div className="mt-5 flex gap-2 rounded-2xl bg-[#fffbeb] p-4 text-sm text-[#92400e]">
               <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
               <p>
                 {product.requires_prescription ? 'Produto sujeito a prescrição. ' : 'Produto de venda restrita. '}
@@ -135,9 +135,9 @@ export default function ProductPage() {
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             {canChooseQty && (
-              <div className="flex h-11 items-center justify-between border border-[#cbd5e1] sm:w-36">
+              <div className="flex h-14 items-center justify-between rounded-full bg-surface-strong px-1 sm:w-40">
                 <button
-                  className="flex size-11 items-center justify-center text-ink hover:bg-[#f1f5f9]"
+                  className="flex size-11 items-center justify-center rounded-full text-ink hover:bg-hairline"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   aria-label="Diminuir quantidade"
                 >
@@ -147,7 +147,7 @@ export default function ProductPage() {
                   {quantity}
                 </span>
                 <button
-                  className="flex size-11 items-center justify-center text-ink hover:bg-[#f1f5f9]"
+                  className="flex size-11 items-center justify-center rounded-full text-ink hover:bg-hairline"
                   onClick={() => setQuantity((q) => Math.min(999, q + 1))}
                   aria-label="Aumentar quantidade"
                 >
@@ -156,14 +156,14 @@ export default function ProductPage() {
               </div>
             )}
             <div className="flex-1">
-              <ProductAction product={product} quantity={quantity} />
+              <ProductAction product={product} quantity={quantity} size="lg" />
             </div>
           </div>
 
           {details.length > 0 && (
-            <dl className="mt-10 border-t border-[#e8e8e8]">
+            <dl className="mt-10 border-t border-hairline">
               {details.map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4 border-b border-[#e8e8e8] py-3 text-sm">
+                <div key={k} className="flex justify-between gap-4 border-b border-hairline py-3 text-sm">
                   <dt className="text-muted">{k}</dt>
                   <dd className="text-right font-medium text-ink">{v}</dd>
                 </div>

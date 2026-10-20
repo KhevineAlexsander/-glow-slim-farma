@@ -94,7 +94,7 @@ export default function SettingsPage() {
     <form onSubmit={submit} className="mx-auto max-w-3xl pb-24">
       <AdminPageHeader title="Configurações" />
 
-      <div className="mb-6 flex gap-6 overflow-x-auto border-b border-[#e8e8e8] [scrollbar-width:none]" role="tablist">
+      <div className="mb-6 flex gap-6 overflow-x-auto border-b border-hairline [scrollbar-width:none]" role="tablist">
         {TABS.map((t) => (
           <button
             key={t}
@@ -102,7 +102,7 @@ export default function SettingsPage() {
             onClick={() => setTab(t)}
             role="tab"
             aria-selected={tab === t}
-            className={`-mb-px h-11 shrink-0 border-b-2 px-1 text-sm ${tab === t ? 'border-ink font-medium text-ink' : 'border-transparent text-muted hover:text-ink'}`}
+            className={`-mb-px h-11 min-w-11 shrink-0 border-b-2 px-2 text-sm ${tab === t ? 'border-ink font-medium text-ink' : 'border-transparent text-muted hover:text-ink'}`}
           >
             {t}
           </button>
@@ -147,7 +147,7 @@ export default function SettingsPage() {
                 <option value="order">Compra — carrinho com pedido (somente produtos com preço e sem restrição)</option>
               </select>
             </Field>
-            <p className="rounded-lg bg-[#f6f8fb] p-3 text-xs text-muted">
+            <p className="rounded-lg bg-surface-soft p-3 text-xs text-muted">
               Em ambos os modos o pedido/orçamento é registrado no painel (menu Pedidos). Não há pagamento online: a loja
               confirma valores, pagamento e entrega diretamente com o cliente.
             </p>
@@ -218,7 +218,7 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#e8e8e8] bg-white p-3 lg:right-[9px] lg:bottom-[9px] lg:left-[241px] lg:rounded-b-2xl">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-hairline bg-white p-3 lg:right-[9px] lg:bottom-[9px] lg:left-[241px] lg:rounded-b-3xl">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           {error && <div className="flex-1"><ErrorBox message={error} /></div>}
           <button type="submit" className="btn-primary ml-auto min-w-40" disabled={saving}>

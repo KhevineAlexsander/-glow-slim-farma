@@ -10,7 +10,7 @@ import { buildCategoryTree, groupOf, slugsForCategory } from '../../lib/category
 import { fetchCatalog, type CatalogSort } from '../../services/catalog'
 import type { CatalogProduct } from '../../types'
 
-/** Produtos por página: divisível por 2, 3, 4 e 5 colunas, sem card órfão. */
+/** Produtos por página: divisível por 2, 3 e 4 colunas, sem card órfão. */
 const PAGE = 60
 
 const FLAGS = {
@@ -87,21 +87,21 @@ export default function ProductsPage() {
 
   const chip = (active: boolean) =>
     `inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors ${
-      active ? 'bg-ink text-white' : 'bg-[#f1f5f9] text-ink hover:bg-[#e2e8f0]'
+      active ? 'bg-ink text-white' : 'bg-surface-strong text-ink hover:bg-hairline'
     }`
   const subChip = (active: boolean) =>
     `inline-flex h-10 shrink-0 items-center rounded-full border px-4 text-sm font-medium whitespace-nowrap transition-colors ${
-      active ? 'border-ink text-ink' : 'border-[#cbd5e1] text-muted hover:text-ink'
+      active ? 'border-ink bg-white text-ink' : 'border-hairline bg-white text-body hover:text-ink'
     }`
   const total = sorted?.length ?? 0
   const shown = sorted ? sorted.slice(0, limit) : null
 
   return (
-    <div className="wrap py-8">
+    <div className="wrap py-10 lg:py-14">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
-          <h1 className="text-2xl font-semibold text-ink">{title}</h1>
-          <p className="mt-1 text-sm text-muted" aria-live="polite">
+          <h1 className="display-md text-ink">{title}</h1>
+          <p className="mt-2 text-base text-body" aria-live="polite">
             {sorted ? `${total} ${total === 1 ? 'produto' : 'produtos'}` : 'Carregando…'}
           </p>
         </div>
@@ -119,7 +119,7 @@ export default function ProductsPage() {
 
       {/* Grupos numa fileira só (rola de lado quando não cabe); a bolinha é a cor dos frascos do grupo */}
       <div
-        className="-mx-(--margin) mt-6 flex gap-2 overflow-x-auto px-(--margin) pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-(--gutter) mt-6 flex gap-2 overflow-x-auto px-(--gutter) pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         aria-label="Grupos de categorias"
       >
         <button onClick={() => update('categoria', '')} aria-pressed={!categoria} className={chip(!categoria)}>
@@ -140,7 +140,7 @@ export default function ProductsPage() {
 
       {activeGroup && activeChildren.length > 0 && (
         <div
-          className="-mx-(--margin) mt-2 flex gap-2 overflow-x-auto px-(--margin) pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="-mx-(--gutter) mt-2 flex gap-2 overflow-x-auto px-(--gutter) pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label={`Subcategorias de ${activeGroup.name}`}
         >
           <button
@@ -189,7 +189,7 @@ export default function ProductsPage() {
           </EmptyState>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
               {shown.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

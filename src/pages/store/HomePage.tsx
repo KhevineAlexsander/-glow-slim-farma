@@ -1,7 +1,6 @@
-import { ArrowRight, ArrowUpRight, MessageCircle } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { ArrowRight, ChevronRight, MessageCircle, Mail, ShieldCheck, Wallet } from 'lucide-react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useOutletContext } from 'react-router'
-import { ProductAction } from '../../components/store/ProductAction'
 import { PriceBlock, ProductCard, ProductImage } from '../../components/store/ProductCard'
 import { Reveal } from '../../components/store/Reveal'
 import type { StoreOutletContext } from '../../components/store/StoreLayout'
@@ -9,15 +8,14 @@ import { VialArt, groupColors } from '../../components/store/VialArt'
 import { EmptyState, PageLoader } from '../../components/ui/misc'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
 import { buildCategoryTree, type CategoryGroup } from '../../lib/categoryTree'
-import { ACERVO } from '../../lib/imageCredits'
 import { whatsappLink } from '../../lib/whatsapp'
 import { fetchBanners, fetchCatalog } from '../../services/catalog'
 import type { Banner, CatalogProduct } from '../../types'
 
 /*
- * Direção "palco dividido" (TasteSkill, seed 403553028): metade da tela fica parada
- * enquanto a outra rola. Ideia: o frasco de tampa colorida é o palco fixo, e cada
- * grupo de produtos dá a sua cor ao líquido (a interação viva da página).
+ * Página inicial no sistema do DESIGN.md "Coinbase" (awesome-claude-design), com a marca
+ * da loja: faixa escura no topo com os produtos reais em cards sobrepostos, depois o ritmo
+ * branco / cinza-claro / escuro, títulos grandes em peso 400 e uma única cor de ação.
  */
 
 function formatPhone(digits: string) {
@@ -26,8 +24,6 @@ function formatPhone(digits: string) {
   if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
   return digits
 }
-
-const delay = (ms: number) => ({ '--d': `${ms}ms` }) as CSSProperties
 
 /** Link interno (react-router) ou externo, conforme o endereço do banner. */
 function SmartLink({ to, className, children }: { to: string; className: string; children: ReactNode }) {
@@ -45,292 +41,197 @@ function SmartLink({ to, className, children }: { to: string; className: string;
   )
 }
 
-// ---------------------------------------------------------------------------
-// 1. Palco + topo + lista de grupos
-// ---------------------------------------------------------------------------
-function Stage({ group, index, count }: { group: CategoryGroup | null; index: number; count: number }) {
-  const colors = group ? groupColors(index) : null
+/** Cabeçalho de seção: rótulo em pílula, título de display e um link opcional. */
+function SectionHead({
+  id,
+  label,
+  title,
+  link,
+}: {
+  id: string
+  label?: string
+  title: string
+  link?: { to: string; text: string }
+}) {
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#0a63cf]">
-      {/* Repouso: fotografia real do universo da farmácia (acervo aberto) */}
-      <img
-        src={ACERVO.frascosAzuis.src}
-        width={ACERVO.frascosAzuis.width}
-        height={ACERVO.frascosAzuis.height}
-        alt={ACERVO.frascosAzuis.alt}
-        fetchPriority="high"
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${group ? 'opacity-0' : 'opacity-100'}`}
-      />
-      {/* Véu neutro chapado sob o nome que atravessa a foto, para o texto branco ficar legível */}
-      <div
-        className={`pointer-events-none absolute inset-x-0 bottom-0 h-[17%] bg-black/50 transition-opacity duration-500 ${group ? 'opacity-0' : 'opacity-100'}`}
-        aria-hidden="true"
-      />
-      {/* Grupo ativo: o frasco ganha a cor do grupo */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center transition-[opacity,background-color] duration-500 ${group ? 'opacity-100' : 'opacity-0'}`}
-        style={{ backgroundColor: colors ? colors[0] : undefined }}
-        aria-hidden={!group}
-      >
-        <VialArt
-          seed={group?.group.slug ?? 'glow'}
-          color={colors ? ['#ffffff', colors[1]] : undefined}
-          background={false}
-          className="h-[72%] w-auto max-w-full"
-          title={group ? `Frasco ilustrativo na cor de ${group.group.name}` : undefined}
-        />
+    <div className="mb-10 flex flex-wrap items-end justify-between gap-x-6 gap-y-4 lg:mb-12">
+      <div>
+        {label && <p className="badge-pill">{label}</p>}
+        <Reveal as="h2" id={id} className={`display-lg max-w-[18ch] text-ink ${label ? 'mt-4' : ''}`}>
+          {title}
+        </Reveal>
       </div>
-      {group && (
-        <p className="absolute right-5 bottom-5 left-5 text-sm font-medium text-white" aria-live="polite">
-          {group.group.name} · <span className="tabular">{count}</span> produto(s)
-        </p>
+      {link && (
+        <Link to={link.to} className="inline-flex min-h-11 items-center gap-1 text-base font-semibold text-brand-dark hover:underline">
+          {link.text} <ArrowRight className="size-4" aria-hidden="true" />
+        </Link>
       )}
     </div>
   )
 }
 
-function SplitStage({
-  storeName,
+// ---------------------------------------------------------------------------
+// 1. Faixa escura do topo com cards de produto sobrepostos
+// ---------------------------------------------------------------------------
+function HeroCard({ product, className = '' }: { product: CatalogProduct; className?: string }) {
+  return (
+    <div className={`rounded-3xl bg-white p-3 text-ink ${className}`}>
+      <ProductImage product={product} className="aspect-[4/3] w-full rounded-2xl" />
+      <div className="px-2 pt-4 pb-2">
+        <p className="line-clamp-2 text-lg font-semibold">{product.name}</p>
+        <p className="mt-0.5 text-sm text-body">{product.category_name}</p>
+        <div className="mt-4 flex items-end justify-between gap-3">
+          <PriceBlock product={product} />
+          <Link
+            to={`/produto/${product.slug}`}
+            className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-semibold text-brand-dark hover:underline"
+          >
+            Ver produto <ChevronRight className="size-4" aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Hero({
   hero,
-  tree,
-  counts,
-  showCategories,
-  categoriesTitle,
+  products,
+  storeName,
   whatsapp,
 }: {
+  hero?: Banner
+  products: CatalogProduct[]
   storeName: string
-  hero: Banner | undefined
-  tree: CategoryGroup[]
-  counts: Map<string, number>
-  showCategories: boolean
-  categoriesTitle: string
   whatsapp: string | null
 }) {
-  const [active, setActive] = useState(-1)
-  const heroRef = useRef<HTMLDivElement>(null)
-  const rowsRef = useRef<(HTMLLIElement | null)[]>([])
-  const group = active >= 0 ? (tree[active] ?? null) : null
-
-  // Rolar até o meio da tela ativa a linha; voltar ao topo devolve a fotografia.
-  useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined') return
-    const rowsIo = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) setActive(Number((e.target as HTMLElement).dataset.index))
-        }
-      },
-      { rootMargin: '-45% 0px -45% 0px' },
-    )
-    rowsRef.current.forEach((r) => r && rowsIo.observe(r))
-    const heroIo = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) setActive(-1)
-      },
-      { threshold: 0.55 },
-    )
-    if (heroRef.current) heroIo.observe(heroRef.current)
-    return () => {
-      rowsIo.disconnect()
-      heroIo.disconnect()
-    }
-  }, [tree.length])
-
-  const name = storeName.toLowerCase()
-  // Nome em uma linha: tamanho calculado pelo número de letras
-  const wordmarkSize = `clamp(2.75rem, ${Math.min(8.2, 70 / Math.max(name.length * 0.56, 1)).toFixed(2)}vw, 9.5rem)`
-  const groupCount = (g: CategoryGroup) =>
-    [g.group, ...g.children].reduce((sum, c) => sum + (counts.get(c.slug) ?? 0), 0)
-
+  const [front, ...back] = products
   return (
-    <section className="bg-brand-dark text-white" aria-label="Início">
-      <div className="wrap grid gap-x-8 pt-3 pb-16 lg:grid-cols-[47fr_53fr] lg:pb-28">
-        {/* Palco: fixo no desktop enquanto a coluna da direita rola */}
-        <div className="h-[34svh] min-h-56 lg:sticky lg:top-28 lg:h-[calc(100svh-8.5rem)]">
-          <Stage group={group} index={active} count={group ? groupCount(group) : 0} />
-        </div>
-
-        <div className="min-w-0">
-          {/* Topo: o que é a loja, a frase e a ação */}
-          <div ref={heroRef} className="flex flex-col lg:min-h-[calc(100svh-8.5rem)]">
-            {/* O nome atravessa a borda do palco (sobre o azul, nunca sobre o desenho) */}
-            <h1
-              className="scroll-shrink relative z-10 order-first -mt-[0.55em] font-normal whitespace-nowrap lowercase lg:order-last lg:mt-0 lg:-ml-[10vw]"
-              style={{ fontSize: wordmarkSize, lineHeight: 0.95, letterSpacing: '-0.045em' }}
-            >
-              <span className="sr-only">{storeName}</span>
-              <span aria-hidden="true">{name}</span>
-            </h1>
-            <p className="sr-only">Loja de injetáveis estéticos, vitaminas e ativos, com pedidos pelo WhatsApp.</p>
-            <div className="flex flex-1 flex-col justify-center pt-6 pb-2 lg:py-6">
-              <p className="load-rise t-lead max-w-[26ch] font-medium" style={delay(120)}>
-                {hero?.title ?? 'Saúde, beleza e bem-estar.'}
-              </p>
-              {hero?.subtitle && (
-                <p className="load-rise mt-3 max-w-[46ch] text-base text-[#d6e6fb]" style={delay(220)}>
-                  {hero.subtitle}
-                </p>
-              )}
-              <div className="load-rise mt-6 flex flex-wrap gap-3 lg:mt-8" style={delay(320)}>
-                <SmartLink to={hero?.button_link || '/produtos'} className="btn bg-white text-brand-dark hover:bg-[#d6effc]">
-                  {hero?.button_label || 'Ver produtos'} <ArrowRight className="size-4" />
-                </SmartLink>
-                {whatsapp && (
-                  <a
-                    href={whatsappLink(whatsapp, `Olá, ${storeName}!`)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn bg-[#0a63cf] text-white hover:bg-[#0b6fe6]"
-                  >
-                    <MessageCircle className="size-4" /> Falar no WhatsApp
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Lista ativa dos grupos */}
-          {showCategories && tree.length > 0 && (
-            <div className="mt-28 lg:mt-24">
-              <Reveal as="h2" className="t-head font-medium">
-                {categoriesTitle}
-              </Reveal>
-              <ul className="mt-8">
-                {tree.map((g, index) => {
-                  const isActive = index === active
-                  const total = groupCount(g)
-                  const [main] = groupColors(index)
-                  return (
-                    <li
-                      key={g.group.id}
-                      ref={(el) => {
-                        rowsRef.current[index] = el
-                      }}
-                      data-index={index}
-                    >
-                      <button
-                        type="button"
-                        onMouseEnter={() => setActive(index)}
-                        onFocus={() => setActive(index)}
-                        onClick={() => setActive(index)}
-                        aria-expanded={isActive}
-                        className={`flex min-h-14 w-full items-center gap-4 text-left transition-colors ${isActive ? 'text-white' : 'text-[#c9dcf7]'}`}
-                      >
-                        <span className="size-3.5 shrink-0" style={{ backgroundColor: main }} aria-hidden="true" />
-                        <span className="t-lead flex-1 font-medium">{g.group.name}</span>
-                        <span className="tabular text-base">{total}</span>
-                      </button>
-                      {isActive && (
-                        <div className="pb-5 pl-[1.875rem] text-base text-[#d6e6fb]">
-                          {g.children.length > 0 && <p className="max-w-[34ch]">{g.children.map((c) => c.name).join(' · ')}</p>}
-                          <Link
-                            to={`/produtos?categoria=${g.group.slug}`}
-                            className="mt-2 inline-flex min-h-11 items-center gap-1 font-medium text-white underline"
-                          >
-                            Ver {total} produto(s) <ArrowRight className="size-4" />
-                          </Link>
-                        </div>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 2. Destaques: prato quadrado com abas
-// ---------------------------------------------------------------------------
-function Showcase({ title, products }: { title: string; products: CatalogProduct[] }) {
-  const [tab, setTab] = useState(0)
-  const p = products[Math.min(tab, products.length - 1)]
-  if (!p) return null
-  const short = (name: string) => name.split(/ [–(-] |\(/)[0].trim()
-
-  return (
-    <section className="wrap grid gap-8 py-20 md:grid-cols-2 md:items-stretch md:gap-12 lg:py-32" aria-labelledby="destaques">
-      <Reveal className="order-2 md:order-1">
-        <Link to={`/produto/${p.slug}`} className="block" aria-label={`Ver ${p.name}`}>
-          <ProductImage product={p} className="aspect-square w-full" />
-        </Link>
-      </Reveal>
-      <div className="order-1 flex flex-col md:order-2 md:justify-between">
+    <section className="overflow-hidden bg-dark text-white" aria-labelledby="topo">
+      <div className="wrap grid items-center gap-14 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10 lg:py-24">
         <div>
-          <Reveal as="h2" id="destaques" className="t-head font-medium">
-            {title}
-          </Reveal>
-          {products.length > 1 && (
-            <Reveal i={1} className="mt-6 flex flex-wrap gap-x-6" role="tablist" aria-label={title}>
-              {products.map((x, i) => (
-                <button
-                  key={x.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === tab}
-                  onClick={() => setTab(i)}
-                  className={`min-h-11 max-w-[18ch] truncate text-base font-medium transition-colors ${i === tab ? 'text-ink underline' : 'text-muted hover:text-ink'}`}
-                >
-                  {short(x.name)}
-                </button>
-              ))}
-            </Reveal>
-          )}
-        </div>
-        <Reveal i={2} className="mt-6 md:mt-12" role="tabpanel">
-          <h3 className="t-lead font-medium">{p.name}</h3>
-          <p className="mt-4 max-w-[46ch] text-base text-muted">
-            {p.short_description || [p.presentation, p.brand, p.category_name].filter(Boolean).join(' · ')}
-          </p>
-          <div className="mt-6">
-            <PriceBlock product={p} size="lg" />
+          <p className="badge-pill bg-dark-elevated text-white">Pedidos pelo WhatsApp</p>
+          <h1 id="topo" className="display-mega mt-6 max-w-[14ch]">
+            {hero?.title ?? 'Saúde, beleza e bem-estar.'}
+          </h1>
+          {hero?.subtitle && <p className="mt-6 max-w-[46ch] text-lg text-on-dark-soft">{hero.subtitle}</p>}
+          <div className="mt-8 flex flex-wrap gap-3">
+            <SmartLink to={hero?.button_link || '/produtos'} className="btn-primary btn-lg">
+              {hero?.button_label || 'Ver produtos'}
+            </SmartLink>
+            {whatsapp && (
+              <a
+                href={whatsappLink(whatsapp, `Olá, ${storeName}!`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-outline-on-dark btn-lg"
+              >
+                <MessageCircle className="size-5" aria-hidden="true" /> Falar no WhatsApp
+              </a>
+            )}
           </div>
-        </Reveal>
-        <Reveal i={3} className="mt-8 grid gap-3 sm:grid-cols-2 md:mt-12">
-          <ProductAction product={p} />
-          <Link to={`/produto/${p.slug}`} className="btn-outline w-full">
-            Ver detalhes
-          </Link>
-        </Reveal>
+          {/* Fatos do atendimento (como a loja funciona de verdade) */}
+          <ul className="mt-10 grid gap-3 text-sm text-on-dark-soft sm:grid-cols-3 sm:gap-6">
+            <li className="flex items-start gap-2">
+              <Wallet className="mt-0.5 size-4 shrink-0 text-white" aria-hidden="true" /> Sem pagamento no site
+            </li>
+            <li className="flex items-start gap-2">
+              <MessageCircle className="mt-0.5 size-4 shrink-0 text-white" aria-hidden="true" /> Confirmação pelo WhatsApp
+            </li>
+            <li className="flex items-start gap-2">
+              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-white" aria-hidden="true" /> Receitas avaliadas por
+              responsável técnico
+            </li>
+          </ul>
+        </div>
+
+        {/* Cards sobrepostos: o da frente é o produto em destaque; os de trás só aparecem no desktop */}
+        {front && (
+          <div className="relative mx-auto w-full max-w-sm lg:mr-0">
+            {/* camadas de trás: cards escuros elevados, só profundidade (sem conteúdo cortado) */}
+            {back.length > 0 && (
+              <div className="absolute inset-0 hidden translate-x-14 -translate-y-8 rotate-6 rounded-3xl bg-dark-elevated lg:block" aria-hidden="true" />
+            )}
+            {back.length > 1 && (
+              <div className="absolute inset-0 hidden -translate-x-12 translate-y-6 -rotate-6 rounded-3xl bg-dark-elevated lg:block" aria-hidden="true" />
+            )}
+            <HeroCard product={front} className="relative" />
+          </div>
+        )}
       </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// 3. Faixa de produtos (arquivo: o único módulo repetido da página)
+// 2. Grupos de categorias em cards (2 e 3 colunas)
 // ---------------------------------------------------------------------------
-function ProductStrip({
+function Groups({ title, tree, counts }: { title: string; tree: CategoryGroup[]; counts: Map<string, number> }) {
+  const total = (g: CategoryGroup) => [g.group, ...g.children].reduce((sum, c) => sum + (counts.get(c.slug) ?? 0), 0)
+  return (
+    <section className="section-y bg-white" aria-labelledby="categorias">
+      <div className="wrap">
+        <SectionHead id="categorias" label="Catálogo" title={title} link={{ to: '/produtos', text: 'Ver todos os produtos' }} />
+        <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-6">
+          {tree.map((g, i) => {
+            const n = total(g)
+            return (
+              <Reveal as="li" key={g.group.id} i={i % 3}>
+                <Link to={`/produtos?categoria=${g.group.slug}`} className="card card-hover flex h-full flex-col p-4 sm:p-6 lg:p-8">
+                  <span className="flex size-12 items-center justify-center rounded-full bg-surface-strong sm:size-14" aria-hidden="true">
+                    <VialArt seed={g.group.slug} color={groupColors(i)} background={false} className="h-8 w-auto sm:h-10" />
+                  </span>
+                  <span className="mt-4 text-base font-semibold text-ink sm:mt-6 sm:text-lg">{g.group.name}</span>
+                  <span className="tabular mt-1 text-sm text-body">
+                    {n} {n === 1 ? 'produto' : 'produtos'}
+                  </span>
+                  {g.children.length > 0 && (
+                    <span className="mt-4 line-clamp-2 hidden text-sm text-body sm:block">{g.children.map((c) => c.name).join(' · ')}</span>
+                  )}
+                  <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-brand-dark sm:pt-6">
+                    Ver produtos <ArrowRight className="size-4" aria-hidden="true" />
+                  </span>
+                </Link>
+              </Reveal>
+            )
+          })}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 3. Grade de produtos (destaques e ofertas)
+// ---------------------------------------------------------------------------
+function ProductGrid({
+  id,
+  label,
   title,
   link,
   products,
   tone,
 }: {
+  id: string
+  label?: string
   title: string
   link: string
   products: CatalogProduct[]
-  tone: 'white' | 'surface'
+  tone: 'white' | 'soft'
 }) {
   if (!products.length) return null
+  const n = products.length
+  const wide = n >= 4 ? Math.min(8, Math.floor(n / 4) * 4) : n
+  const narrow = n >= 2 ? Math.min(4, Math.floor(n / 2) * 2) : n
   return (
-    <section className={tone === 'surface' ? 'bg-[#f4f7fb]' : ''} aria-label={title}>
-      <div className="wrap py-20 lg:py-28">
-        <div className="mb-10 flex items-end justify-between gap-4">
-          <Reveal as="h2" className="t-head font-medium">
-            {title}
-          </Reveal>
-          <Link to={link} className="inline-flex min-h-11 shrink-0 items-center gap-1 text-base font-medium text-ink underline">
-            Ver todos <ArrowRight className="size-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {products.slice(0, 10).map((p, i) => (
-            <Reveal key={p.id} i={i % 5} className={i >= 4 ? 'hidden sm:block' : ''}>
-              <ProductCard product={p} tone={tone === 'surface' ? 'white' : 'surface'} />
+    <section className={`section-y ${tone === 'soft' ? 'bg-surface-soft' : 'bg-white'}`} aria-labelledby={id}>
+      <div className="wrap">
+        <SectionHead id={id} label={label} title={title} link={{ to: link, text: 'Ver todos' }} />
+        {/* só fileiras completas: até 4 no celular (2 × 2) e múltiplos de 4 no desktop */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
+          {products.slice(0, wide).map((p, i) => (
+            <Reveal key={p.id} i={i % 4} className={i >= narrow ? 'hidden lg:block' : ''}>
+              <ProductCard product={p} />
             </Reveal>
           ))}
         </div>
@@ -340,175 +241,168 @@ function ProductStrip({
 }
 
 // ---------------------------------------------------------------------------
-// 4. Como comprar: itinerário impresso como um recibo
+// 4. Mais vendidos em linhas (como uma lista de ativos)
 // ---------------------------------------------------------------------------
-const STEPS: { stage: string; rows: [string, string][] }[] = [
-  { stage: 'Na loja', rows: [['Escolha os produtos', 'busca e grupos'], ['Adicione ao orçamento', 'botão do produto']] },
-  { stage: 'No carrinho', rows: [['Informe nome e WhatsApp', 'seus dados'], ['Confira os itens', 'preço do banco']] },
-  { stage: 'No WhatsApp', rows: [['Envie a mensagem pronta', 'WhatsApp da loja']] },
+function ProductRows({ title, products }: { title: string; products: CatalogProduct[] }) {
+  if (!products.length) return null
+  return (
+    <section className="section-y bg-white" aria-labelledby="mais-vendidos">
+      <div className="wrap">
+        <SectionHead
+          id="mais-vendidos"
+          label="Preferidos"
+          title={title}
+          link={{ to: '/produtos?maisvendidos=1', text: 'Ver todos' }}
+        />
+        <div className="card px-4 sm:px-8">
+          <div className="hidden grid-cols-[1fr_10rem_6rem] gap-6 border-b border-hairline py-4 text-sm text-body sm:grid">
+            <span>Produto</span>
+            <span className="text-right">Preço</span>
+            <span />
+          </div>
+          <ul>
+            {products.slice(0, 6).map((p) => (
+              <li key={p.id} className="border-b border-hairline last:border-b-0">
+                <Link
+                  to={`/produto/${p.slug}`}
+                  className="grid items-center gap-6 py-4 sm:grid-cols-[1fr_10rem_6rem]"
+                >
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div className="size-12 shrink-0 overflow-hidden rounded-full bg-surface-strong">
+                      <ProductImage product={p} className="size-full" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold text-ink">{p.name}</p>
+                      <p className="truncate text-sm text-body">{p.category_name}</p>
+                      {/* no celular o preço vem na segunda linha, sem apertar o nome */}
+                      <div className="mt-1 sm:hidden">
+                        <PriceBlock product={p} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="hidden justify-end text-right sm:flex">
+                    <PriceBlock product={p} />
+                  </div>
+                  <span className="hidden items-center justify-end gap-1 text-sm font-semibold text-brand-dark sm:flex">
+                    Ver <ChevronRight className="size-4" aria-hidden="true" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 5. Como comprar: três cards de passo
+// ---------------------------------------------------------------------------
+const STEPS = [
+  { title: 'Escolha os produtos', text: 'Busque pelo nome ou navegue pelos grupos e adicione os itens ao seu pedido.' },
+  { title: 'Informe seus dados', text: 'No carrinho, confira os itens e deixe seu nome e WhatsApp. Não é preciso criar conta.' },
+  { title: 'Finalize pelo WhatsApp', text: 'A mensagem com o pedido abre pronta. A loja confirma valores, pagamento e entrega.' },
 ]
 
 function HowItWorks() {
-  // Borda inferior em zigue-zague
-  const zigzag = useMemo(() => {
-    const teeth = 22
-    const pts = ['0 0', '100% 0', '100% calc(100% - 12px)']
-    for (let i = teeth; i >= 0; i--) pts.push(`${(i / teeth) * 100}% ${i % 2 ? '100%' : 'calc(100% - 12px)'}`)
-    return `polygon(${pts.join(',')})`
-  }, [])
-
   return (
-    <section className="bg-brand-light" aria-labelledby="como-comprar">
-      <div className="wrap grid gap-12 py-20 lg:grid-cols-12 lg:py-32">
-        <div className="lg:col-span-5">
-          <Reveal as="h2" id="como-comprar" className="t-head font-medium">
-            Como comprar
-          </Reveal>
-          <Reveal i={1} as="p" className="mt-6 max-w-[34ch] text-base">
-            Sem cadastro obrigatório e sem pagamento no site: você monta o pedido aqui e a loja confirma valores,
-            pagamento e entrega com você pelo WhatsApp.
-          </Reveal>
-          <Reveal i={2} className="mt-10 max-w-md">
-            <img
-              src={ACERVO.vidraria1895.src}
-              width={ACERVO.vidraria1895.width}
-              height={ACERVO.vidraria1895.height}
-              alt={ACERVO.vidraria1895.alt}
-              loading="lazy"
-              decoding="async"
-              className="w-full mix-blend-multiply"
-            />
-          </Reveal>
+    <section className="section-y bg-white" aria-labelledby="como-comprar">
+      <div className="wrap">
+        <SectionHead id="como-comprar" label="Como comprar" title="Seu pedido em três passos" />
+        <ol className="grid gap-4 md:grid-cols-3 lg:gap-6">
+          {STEPS.map((step, i) => (
+            <Reveal as="li" key={step.title} i={i} className="card p-6 lg:p-8">
+              <span className="tabular flex size-10 items-center justify-center rounded-full bg-surface-strong text-base font-semibold text-ink">
+                {i + 1}
+              </span>
+              <h3 className="mt-6 text-lg font-semibold text-ink">{step.title}</h3>
+              <p className="mt-2 text-base text-body">{step.text}</p>
+            </Reveal>
+          ))}
+        </ol>
+        <p className="mt-6 text-sm text-body">
+          Itens com prescrição exigem receita ou documentação, avaliadas pelo responsável técnico.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 6. Banner secundário (editável no painel) como faixa clara dividida
+// ---------------------------------------------------------------------------
+function SecondaryBanner({ banner, groups }: { banner: Banner; groups: number }) {
+  return (
+    <section className="section-y bg-white" aria-labelledby="faixa">
+      <div className="wrap">
+        <div className="grid items-center gap-10 overflow-hidden rounded-3xl bg-surface-soft p-6 sm:p-10 lg:grid-cols-2 lg:p-14">
+          <div>
+            <Reveal as="h2" id="faixa" className="display-md max-w-[18ch] text-ink">
+              {banner.title}
+            </Reveal>
+            {banner.subtitle && <p className="mt-4 max-w-[44ch] text-lg text-body">{banner.subtitle}</p>}
+            <SmartLink to={banner.button_link || '/produtos'} className="btn-primary mt-8">
+              {banner.button_label || 'Ver o catálogo'}
+            </SmartLink>
+          </div>
+          {banner.image_url ? (
+            <img src={banner.image_url} alt="" loading="lazy" decoding="async" className="w-full rounded-2xl object-cover" />
+          ) : (
+            // Sem imagem: os frascos nas cores dos grupos
+            <div className="flex items-end justify-center gap-3 sm:gap-5" aria-hidden="true">
+              {Array.from({ length: Math.max(1, Math.min(groups, 6)) }, (_, i) => (
+                <VialArt
+                  key={i}
+                  seed={String(i)}
+                  color={groupColors(i)}
+                  background={false}
+                  kind={i % 2 ? 'ampola' : 'frasco'}
+                  className="h-24 w-auto sm:h-40"
+                />
+              ))}
+            </div>
+          )}
         </div>
-        <Reveal i={1} className="lg:col-span-5 lg:col-start-7">
-          <div className="max-w-[30rem] bg-white px-6 pt-6 pb-10 sm:px-8" style={{ clipPath: zigzag }}>
-            {STEPS.map((s) => (
-              <div key={s.stage} className="mt-7 first:mt-0">
-                <p className="text-base font-semibold">{s.stage}</p>
-                {s.rows.map(([left, right]) => (
-                  <p key={left} className="mt-2 flex items-baseline gap-2 text-base">
-                    <span className="min-w-0">{left}</span>
-                    <span className="mb-1 min-w-4 flex-1 border-b-4 border-dotted border-[#c3cfdd]" aria-hidden="true" />
-                    <span className="shrink-0 text-muted">{right}</span>
-                  </p>
-                ))}
-              </div>
-            ))}
-            <p className="mt-8 flex min-h-11 items-center justify-between gap-3 bg-ink px-4 text-base text-white">
-              <span>A loja confirma o pedido</span>
-              <span>pelo WhatsApp</span>
-            </p>
-          </div>
-          <p className="mt-6 max-w-[30rem] text-sm text-muted">
-            Itens com prescrição exigem receita ou documentação, avaliadas pelo responsável técnico.
-          </p>
-        </Reveal>
       </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// 5. Faixa de cor que quebra o palco dividido (banner secundário editável)
+// 7. Faixa escura de contato antes do rodapé
 // ---------------------------------------------------------------------------
-function ColorBand({ banner }: { banner: Banner | undefined }) {
-  const pic = banner?.image_url ? { src: banner.image_url, width: 1400, height: 900, alt: banner.title } : ACERVO.solucoes
-  return (
-    <section className="grid bg-ink text-white lg:grid-cols-2" aria-labelledby="faixa">
-      <div className="wrap flex flex-col justify-center py-20 lg:py-28 lg:pr-12">
-        <Reveal as="h2" id="faixa" className="t-head max-w-[16ch] font-medium">
-          {banner?.title ?? 'Cada cor, um grupo de produtos'}
-        </Reveal>
-        <Reveal i={1} as="p" className="mt-6 max-w-[40ch] text-base text-[#cbd5e1]">
-          {banner?.subtitle ??
-            'Vitaminas, aminoácidos, ativos, estética e correlatos em um só catálogo, com atendimento direto pelo WhatsApp.'}
-        </Reveal>
-        <Reveal i={2} className="mt-8">
-          <SmartLink to={banner?.button_link || '/produtos'} className="btn bg-white text-ink hover:bg-[#e2e8f0]">
-            {banner?.button_label || 'Ver o catálogo'} <ArrowRight className="size-4" />
-          </SmartLink>
-        </Reveal>
-      </div>
-      <div className="relative min-h-[56svh] overflow-clip lg:min-h-full">
-        <img
-          src={pic.src}
-          width={pic.width}
-          height={pic.height}
-          alt={pic.alt}
-          loading="lazy"
-          decoding="async"
-          className="scroll-drift absolute inset-0 h-full w-full object-cover"
-        />
-      </div>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 6. Contato em linhas grandes
-// ---------------------------------------------------------------------------
-function Contact() {
+function ContactBand() {
   const s = useLoadedSettings()
-  const rows: { text: string; href?: string }[] = [
-    { text: s.store_name },
-    ...(s.address ? [{ text: s.address, href: `https://www.google.com/maps/search/${encodeURIComponent(s.address)}` }] : []),
-    ...(s.opening_hours ? [{ text: s.opening_hours }] : []),
-    ...(s.whatsapp_number
-      ? [{ text: formatPhone(s.whatsapp_number), href: whatsappLink(s.whatsapp_number, `Olá, ${s.store_name}!`) }]
-      : []),
-    ...(s.contact_email ? [{ text: s.contact_email, href: `mailto:${s.contact_email}` }] : []),
-  ]
-  const greetingHref = s.whatsapp_number
-    ? whatsappLink(s.whatsapp_number, `Olá, ${s.store_name}!`)
-    : s.contact_email
-      ? `mailto:${s.contact_email}`
-      : null
-
+  const facts = [s.opening_hours, s.address, s.whatsapp_number ? formatPhone(s.whatsapp_number) : null].filter(Boolean)
   return (
-    <section className="bg-brand-dark text-white" aria-labelledby="contato">
-      <h2 id="contato" className="wrap t-head flex min-h-32 items-end gap-5 pb-5 font-normal">
-        Fale com a gente
-        {greetingHref && (
-          <a
-            href={greetingHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Abrir conversa"
-            className="relative mb-[0.06em] inline-flex size-[0.9em] shrink-0 items-center justify-center rounded-full bg-white text-brand-dark transition-transform before:absolute before:-inset-2 before:content-[''] hover:scale-105 active:scale-95"
-          >
-            <ArrowUpRight className="size-[0.5em]" />
-          </a>
-        )}
-      </h2>
-      {rows.map((r, i) => (
-        <Reveal key={r.text + i} i={i} className={i % 2 === 0 ? 'bg-[#064a9e]' : 'bg-brand-dark'}>
-          <div className="wrap flex min-h-24 items-end justify-between gap-6 pb-4 md:min-h-32">
-            {r.href ? (
-              <a
-                href={r.href}
-                target={r.href.startsWith('mailto') ? undefined : '_blank'}
-                rel="noopener noreferrer"
-                className="t-head inline-block min-w-0 py-1.5 hover:underline"
-              >
-                {r.text}
-              </a>
-            ) : (
-              <p className="t-head min-w-0">{r.text}</p>
-            )}
-            {i === 0 && (
-              <img
-                src={ACERVO.vitrine1910.src}
-                width={ACERVO.vitrine1910.width}
-                height={ACERVO.vitrine1910.height}
-                alt={ACERVO.vitrine1910.alt}
-                loading="lazy"
-                decoding="async"
-                className="mb-1 size-28 shrink-0 rounded-full object-cover grayscale md:size-40"
-              />
-            )}
-          </div>
+    <section className="section-y bg-dark text-white" aria-labelledby="contato">
+      <div className="wrap text-center">
+        <Reveal as="h2" id="contato" className="display-md mx-auto max-w-[20ch]">
+          Fale com a gente
         </Reveal>
-      ))}
+        <p className="mx-auto mt-4 max-w-[52ch] text-lg text-on-dark-soft">
+          Tire dúvidas sobre produtos, prescrição e entrega direto com a equipe da {s.store_name}.
+        </p>
+        {facts.length > 0 && <p className="mt-4 text-sm text-on-dark-soft">{facts.join(' · ')}</p>}
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          {s.whatsapp_number && (
+            <a
+              href={whatsappLink(s.whatsapp_number, `Olá, ${s.store_name}!`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary btn-lg"
+            >
+              <MessageCircle className="size-5" aria-hidden="true" /> Chamar no WhatsApp
+            </a>
+          )}
+          {s.contact_email && (
+            <a href={`mailto:${s.contact_email}`} className="btn-outline-on-dark btn-lg max-w-full">
+              <Mail className="size-5 shrink-0" aria-hidden="true" /> <span className="truncate">{s.contact_email}</span>
+            </a>
+          )}
+        </div>
+      </div>
     </section>
   )
 }
@@ -537,47 +431,48 @@ export default function HomePage() {
   const featured = products?.filter((p) => p.is_featured) ?? []
   const bestsellers = products?.filter((p) => p.is_bestseller) ?? []
   const offers = products?.filter((p) => p.is_offer) ?? []
-  // Sem nada marcado como destaque, a vitrine mostra os primeiros produtos
-  const showcase = (featured.length ? featured : (products ?? [])).slice(0, 3)
+  // Sem nada marcado como destaque, o topo e a vitrine usam os primeiros produtos
+  const showcase = featured.length ? featured : (products ?? [])
+  const heroProducts = showcase.slice(0, 3)
 
   return (
     <>
-      <SplitStage
-        storeName={s.store_name}
-        hero={hero[0]}
-        tree={tree}
-        counts={counts}
-        showCategories={s.show_categories}
-        categoriesTitle={s.categories_title}
-        whatsapp={s.whatsapp_number}
-      />
+      <Hero hero={hero[0]} products={heroProducts} storeName={s.store_name} whatsapp={s.whatsapp_number} />
+
+      {s.show_categories && tree.length > 0 && <Groups title={s.categories_title} tree={tree} counts={counts} />}
 
       {products === null ? (
         <PageLoader />
       ) : products.length === 0 ? (
-        <div className="wrap py-20">
+        <div className="wrap section-y">
           <EmptyState title="Em breve, novos produtos por aqui.">
             Os produtos aparecem nesta página assim que forem publicados no painel.
           </EmptyState>
         </div>
       ) : (
         <>
-          {s.show_featured && <Showcase title={s.featured_title} products={showcase} />}
-          {s.show_bestsellers && (
-            <ProductStrip title={s.bestsellers_title} link="/produtos?maisvendidos=1" products={bestsellers} tone="surface" />
+          {s.show_featured && (
+            <ProductGrid
+              id="destaques"
+              label="Selecionados"
+              title={s.featured_title}
+              link="/produtos?destaque=1"
+              products={showcase}
+              tone="soft"
+            />
+          )}
+          {s.show_bestsellers && <ProductRows title={s.bestsellers_title} products={bestsellers} />}
+          {s.show_offers && (
+            <ProductGrid id="ofertas" label="Ofertas" title={s.offers_title} link="/produtos?ofertas=1" products={offers} tone="soft" />
           )}
         </>
       )}
 
       <HowItWorks />
 
-      {products && products.length > 0 && s.show_offers && (
-        <ProductStrip title={s.offers_title} link="/produtos?ofertas=1" products={offers} tone="white" />
-      )}
+      {s.show_secondary_banners && secondary[0] && <SecondaryBanner banner={secondary[0]} groups={tree.length} />}
 
-      {s.show_secondary_banners && <ColorBand banner={secondary[0]} />}
-
-      <Contact />
+      <ContactBand />
     </>
   )
 }

@@ -15,10 +15,10 @@ export default function PolicyPage() {
   const content = policy ? s[policy.field] : null
 
   return (
-    <div className="mx-auto max-w-3xl px-(--margin) py-12">
+    <div className="mx-auto max-w-3xl px-(--gutter) py-12">
       {policy && content ? (
         <>
-          <h1 className="text-2xl font-semibold text-ink">{policy.title}</h1>
+          <h1 className="display-md text-ink">{policy.title}</h1>
           <div className="mt-6 text-sm leading-relaxed whitespace-pre-line text-ink">{content}</div>
         </>
       ) : (

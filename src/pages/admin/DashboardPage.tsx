@@ -68,7 +68,7 @@ export default function DashboardPage() {
           <Link
             key={k.label}
             to={k.to}
-            className={`flex flex-col gap-1 border-[#e8e8e8] p-4 hover:bg-[#f9fafb] sm:border-l sm:first:border-l-0 ${
+            className={`flex flex-col gap-1 border-hairline p-4 hover:bg-surface-soft sm:border-l sm:first:border-l-0 ${
               i > 1 ? 'border-t sm:border-t-0' : ''
             } ${i % 2 === 1 ? 'border-l' : ''} ${i === kpis.length - 1 ? 'col-span-2 sm:col-span-1' : ''}`}
           >
@@ -94,20 +94,20 @@ export default function DashboardPage() {
           ) : recent === null ? (
             <ul className="mt-3" aria-hidden="true">
               {Array.from({ length: 3 }, (_, i) => (
-                <li key={i} className="flex h-14 items-center border-t border-[#f2f2f2]">
-                  <span className="h-4 w-1/2 bg-[#f1f5f9]" />
+                <li key={i} className="flex h-14 items-center border-t border-surface-strong">
+                  <span className="h-4 w-1/2 bg-surface-strong" />
                 </li>
               ))}
             </ul>
           ) : recent.rows.length === 0 ? (
-            <p className="mt-3 border border-dashed border-[#d1d5db] px-4 py-3 text-sm text-muted">
+            <p className="mt-3 border border-dashed border-hairline px-4 py-3 text-sm text-muted">
               Nenhum pedido ainda. Quando um cliente finalizar pelo WhatsApp, o pedido aparece aqui.
             </p>
           ) : (
             <ul className="mt-3">
               {recent.rows.map((o) => (
-                <li key={o.id} className="border-t border-[#f2f2f2]">
-                  <Link to={`/admin/pedidos/${o.id}`} className="flex min-h-14 items-center gap-3 py-2 hover:bg-[#f9fafb]">
+                <li key={o.id} className="border-t border-surface-strong">
+                  <Link to={`/admin/pedidos/${o.id}`} className="flex min-h-14 items-center gap-3 py-2 hover:bg-surface-soft">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-ink">
                         <span className="tabular">#{o.order_number}</span> · {o.customer_name}
@@ -125,7 +125,7 @@ export default function DashboardPage() {
               ))}
             </ul>
           )}
-          <p className="mt-auto flex items-baseline justify-between gap-3 border-t border-[#f2f2f2] pt-4 text-sm text-muted">
+          <p className="mt-auto flex items-baseline justify-between gap-3 border-t border-surface-strong pt-4 text-sm text-muted">
             <span className="tabular">{recent ? plural(recent.total, 'pedido ou orçamento', 'pedidos e orçamentos') : ' '}</span>
             <Link to="/admin/pedidos" className="text-ink underline">
               Ver todos
@@ -144,11 +144,11 @@ export default function DashboardPage() {
             </span>
           </p>
           {/* barra na proporção real; sem toco quando é zero */}
-          <div className="mt-2 h-2 w-full rounded-full bg-[#eef1f5]" role="img" aria-label={`${priced} de ${stats.products_total} produtos com preço`}>
+          <div className="mt-2 h-2 w-full rounded-full bg-surface-strong" role="img" aria-label={`${priced} de ${stats.products_total} produtos com preço`}>
             {priced > 0 && <div className="h-2 rounded-full bg-brand-dark" style={{ width: `${pricedPct}%` }} />}
           </div>
           <ul className="mt-4">
-            <li className="flex min-h-14 items-center justify-between gap-3 border-t border-[#f2f2f2] text-sm">
+            <li className="flex min-h-14 items-center justify-between gap-3 border-t border-surface-strong text-sm">
               <span className="text-ink">
                 Sem preço <span className="text-muted">· aparecem como “sob consulta”</span>
               </span>
@@ -161,7 +161,7 @@ export default function DashboardPage() {
                 )}
               </span>
             </li>
-            <li className="flex min-h-14 items-center justify-between gap-3 border-t border-[#f2f2f2] text-sm">
+            <li className="flex min-h-14 items-center justify-between gap-3 border-t border-surface-strong text-sm">
               <span className="text-ink">Aguardando revisão</span>
               <span className="flex shrink-0 items-center gap-4">
                 <span className="tabular text-ink">{stats.products_review}</span>
@@ -172,7 +172,7 @@ export default function DashboardPage() {
                 )}
               </span>
             </li>
-            <li className="flex min-h-14 items-center justify-between gap-3 border-t border-[#f2f2f2] text-sm">
+            <li className="flex min-h-14 items-center justify-between gap-3 border-t border-surface-strong text-sm">
               <span className="text-ink">Rascunhos e ocultos</span>
               <span className="tabular text-ink">{stats.products_total - stats.products_published}</span>
             </li>

@@ -6,19 +6,23 @@ import { productInquiryMessage, whatsappLink } from '../../lib/whatsapp'
 import type { CatalogProduct } from '../../types'
 import { useToast } from '../ui/Toast'
 
-/** Versão do card: botão de contorno com rótulo curto (o rótulo completo vai no aria-label). */
-const COMPACT = 'btn w-full border border-[#cbd5e1] bg-white px-3 text-ink hover:border-ink'
+/** Versão do card: pílula secundária com rótulo curto (o rótulo completo vai no aria-label). */
+const COMPACT = 'btn-outline w-full px-3 text-sm'
 
 /** Botão principal do produto — só aparece quando a ação é realmente possível. */
 export function ProductAction({
   product,
   quantity = 1,
   compact = false,
+  size = 'md',
 }: {
   product: CatalogProduct
   quantity?: number
   compact?: boolean
+  /** lg: pílula de 56px (página do produto) */
+  size?: 'md' | 'lg'
 }) {
+  const big = size === 'lg' ? ' btn-lg' : ''
   const s = useLoadedSettings()
   const { add } = useCart()
   const toast = useToast()
@@ -28,7 +32,7 @@ export function ProductAction({
     return (
       <button
         type="button"
-        className={compact ? COMPACT : 'btn-primary w-full'}
+        className={compact ? COMPACT : `btn-primary w-full${big}`}
         onClick={() => {
           add(product.id, quantity)
           toast(d.action === 'add_to_quote' ? 'Adicionado ao orçamento.' : 'Adicionado ao carrinho.')
@@ -48,11 +52,11 @@ export function ProductAction({
         href={whatsappLink(s.whatsapp_number, productInquiryMessage(s.store_name, product.name, product.sku))}
         target="_blank"
         rel="noopener noreferrer"
-        className={compact ? COMPACT : 'btn-whatsapp w-full'}
+        className={compact ? COMPACT : `btn-whatsapp w-full${big}`}
         aria-label={d.actionLabel}
         title={d.actionLabel}
       >
-        <MessageCircle className={`size-5 ${compact ? 'text-[#0b7a3b]' : ''}`} aria-hidden="true" />
+        <MessageCircle className={`size-5 ${compact ? 'text-brand-dark' : ''}`} aria-hidden="true" />
         {compact ? 'Consultar' : d.actionLabel}
       </a>
     )

@@ -9,24 +9,24 @@ export function BottomNav() {
   const s = useLoadedSettings()
   const { count } = useCart()
   const item = ({ isActive }: { isActive: boolean }) =>
-    `flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium ${isActive ? 'text-ink' : 'text-muted'}`
+    `flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium ${isActive ? 'text-brand-dark' : 'text-body'}`
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex bg-[#f4f7fb] pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-hairline bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label="Navegação principal"
     >
       <NavLink to="/" end className={item}>
-        <Home className="size-6" /> Início
+        <Home className="size-5" /> Início
       </NavLink>
       <NavLink to="/produtos" className={item}>
-        <LayoutGrid className="size-6" /> Produtos
+        <LayoutGrid className="size-5" /> Produtos
       </NavLink>
       <NavLink to="/carrinho" className={item}>
         <span className="relative">
-          <ShoppingCart className="size-6" />
+          <ShoppingCart className="size-5" />
           {count > 0 && (
-            <span className="absolute -top-1.5 -right-2.5 flex min-w-4.5 items-center justify-center rounded-full bg-ink px-1 text-xs font-semibold text-white tabular">
+            <span className="absolute -top-1.5 -right-2.5 flex min-w-4.5 items-center justify-center rounded-full bg-brand-dark px-1 text-xs font-semibold text-white tabular">
               {count > 99 ? '99+' : count}
             </span>
           )}
@@ -38,9 +38,9 @@ export function BottomNav() {
           href={whatsappLink(s.whatsapp_number, `Olá, ${s.store_name}!`)}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium text-muted"
+          className="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium text-body"
         >
-          <MessageCircle className="size-6" /> WhatsApp
+          <MessageCircle className="size-5" /> WhatsApp
         </a>
       )}
     </nav>

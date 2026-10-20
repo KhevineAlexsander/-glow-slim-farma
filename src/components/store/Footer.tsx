@@ -1,70 +1,119 @@
+import type { CSSProperties } from 'react'
 import { Link } from 'react-router'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
-import { IMAGE_CREDITS } from '../../lib/imageCredits'
+import { whatsappLink } from '../../lib/whatsapp'
+
+function formatPhone(digits: string) {
+  const d = digits.replace(/^55/, '')
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return digits
+}
+
+type FooterLink = { label: string; to?: string; href?: string }
 
 /**
- * Rodapé "uma linha discreta" (TasteSkill): o que é a loja, alguns links e o ano.
- * O aviso regulatório fica legível em todas as páginas; os créditos das imagens de
- * acervo aberto são exigidos pelas licenças.
+ * Rodapé claro do sistema: a marca à esquerda, colunas de links e, embaixo, a faixa
+ * legal (aviso regulatório, dados da empresa e o ano), sempre legível.
  */
 export function Footer() {
   const s = useLoadedSettings()
   const year = new Date().getFullYear()
-  const links = [
-    { to: '/produtos', label: 'Produtos' },
-    ...(s.policy_privacy ? [{ to: '/politicas/privacidade', label: 'Privacidade' }] : []),
-    ...(s.policy_terms ? [{ to: '/politicas/termos', label: 'Termos' }] : []),
-    ...(s.policy_shipping ? [{ to: '/politicas/entrega', label: 'Entregas e trocas' }] : []),
-    { to: '/admin/login', label: 'Acesso da equipe' },
-  ]
-  const socials = [
-    s.instagram_url && { href: s.instagram_url, label: 'Instagram' },
-    s.facebook_url && { href: s.facebook_url, label: 'Facebook' },
-    s.tiktok_url && { href: s.tiktok_url, label: 'TikTok' },
-  ].filter(Boolean) as { href: string; label: string }[]
-  const linkClass = 'inline-flex min-h-11 items-center text-ink hover:underline'
+
+  const columns: { title: string; links: FooterLink[] }[] = [
+    {
+      title: 'Loja',
+      links: [
+        { label: 'Início', to: '/' },
+        { label: 'Produtos', to: '/produtos' },
+        { label: s.sales_mode === 'quote' ? 'Orçamento' : 'Carrinho', to: '/carrinho' },
+        { label: 'Minha conta', to: '/minha-conta' },
+      ],
+    },
+    {
+      title: 'Ajuda',
+      links: [
+        ...(s.policy_shipping ? [{ label: 'Entregas e trocas', to: '/politicas/entrega' }] : []),
+        ...(s.policy_privacy ? [{ label: 'Privacidade', to: '/politicas/privacidade' }] : []),
+        ...(s.policy_terms ? [{ label: 'Termos de uso', to: '/politicas/termos' }] : []),
+        { label: 'Acesso da equipe', to: '/admin/login' },
+      ],
+    },
+    {
+      title: 'Contato',
+      links: [
+        ...(s.whatsapp_number
+          ? [{ label: `WhatsApp ${formatPhone(s.whatsapp_number)}`, href: whatsappLink(s.whatsapp_number, `Olá, ${s.store_name}!`) }]
+          : []),
+        ...(s.contact_email ? [{ label: s.contact_email, href: `mailto:${s.contact_email}` }] : []),
+        ...(s.address ? [{ label: s.address, href: `https://www.google.com/maps/search/${encodeURIComponent(s.address)}` }] : []),
+        ...(s.opening_hours ? [{ label: s.opening_hours }] : []),
+      ],
+    },
+    {
+      title: 'Redes',
+      links: [
+        ...(s.instagram_url ? [{ label: 'Instagram', href: s.instagram_url }] : []),
+        ...(s.facebook_url ? [{ label: 'Facebook', href: s.facebook_url }] : []),
+        ...(s.tiktok_url ? [{ label: 'TikTok', href: s.tiktok_url }] : []),
+      ],
+    },
+  ].filter((c) => c.links.length > 0)
+
+  const linkClass = 'inline-flex min-h-11 items-center text-sm text-body hover:text-ink md:min-h-9'
 
   return (
-    <footer className="pb-24 md:pb-0">
-      <div className="wrap pt-24 pb-6 md:pt-40">
-        {(s.restricted_notice || s.footer_text || s.business_info) && (
-          <div className="mb-10 grid gap-4 text-sm text-muted md:grid-cols-2">
-            {s.restricted_notice && <p className="max-w-[62ch]">{s.restricted_notice}</p>}
+    <footer className="border-t border-hairline bg-white pb-20 md:pb-0">
+      <div
+        className="wrap grid grid-cols-2 gap-x-6 gap-y-10 py-14 md:grid-cols-[1.4fr_repeat(var(--cols),minmax(0,1fr))] lg:py-16"
+        style={{ '--cols': columns.length } as CSSProperties}
+      >
+        <div className="col-span-2 md:col-span-1">
+          <p className="text-lg font-semibold text-ink">{s.store_name}</p>
+          {s.slogan && <p className="mt-1 max-w-[28ch] text-sm text-body">{s.slogan}</p>}
+        </div>
+        {columns.map((c) => (
+          <nav key={c.title} aria-label={c.title}>
+            <h2 className="text-sm font-semibold text-ink">{c.title}</h2>
+            <ul className="mt-3">
+              {c.links.map((l) => (
+                <li key={l.label}>
+                  {l.to ? (
+                    <Link to={l.to} className={linkClass}>
+                      {l.label}
+                    </Link>
+                  ) : l.href ? (
+                    <a
+                      href={l.href}
+                      target={l.href.startsWith('mailto') ? undefined : '_blank'}
+                      rel="noopener noreferrer"
+                      className={linkClass}
+                    >
+                      {l.label}
+                    </a>
+                  ) : (
+                    <span className="inline-flex min-h-9 items-center text-sm text-body">{l.label}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))}
+      </div>
+
+      {/* Faixa legal */}
+      <div className="border-t border-hairline">
+        <div className="wrap grid gap-3 py-6 text-xs text-body md:grid-cols-[1fr_auto] md:items-start">
+          <div className="space-y-2">
+            {s.restricted_notice && <p className="max-w-[90ch]">{s.restricted_notice}</p>}
             {(s.footer_text || s.business_info) && (
-              <p className="max-w-[62ch] whitespace-pre-line">{[s.footer_text, s.business_info].filter(Boolean).join('\n')}</p>
+              <p className="max-w-[90ch] whitespace-pre-line">{[s.footer_text, s.business_info].filter(Boolean).join('\n')}</p>
             )}
           </div>
-        )}
-        <div className="grid gap-2 text-sm md:grid-cols-[1fr_auto_1fr] md:items-center">
-          <p className="text-muted">
-            {s.store_name}
-            {s.slogan ? ` · ${s.slogan}` : ''}
+          <p className="md:text-right">
+            © {year} {s.store_name}
           </p>
-          <nav className="flex flex-wrap gap-x-6" aria-label="Rodapé">
-            {links.map((l) => (
-              <Link key={l.to} to={l.to} className={linkClass}>
-                {l.label}
-              </Link>
-            ))}
-            {socials.map((l) => (
-              <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={linkClass}>
-                {l.label}
-              </a>
-            ))}
-          </nav>
-          <p className="text-muted md:text-right">© {year}</p>
         </div>
-        <p className="mt-6 text-xs text-muted">
-          Imagens ilustrativas de acervos abertos:{' '}
-          {IMAGE_CREDITS.map((c, i) => (
-            <span key={c.url}>
-              <a href={c.url} target="_blank" rel="noopener noreferrer" className="underline">
-                {c.title}
-              </a>{' '}
-              ({c.creator}, {c.license}){i < IMAGE_CREDITS.length - 1 ? '; ' : '.'}
-            </span>
-          ))}
-        </p>
       </div>
     </footer>
   )

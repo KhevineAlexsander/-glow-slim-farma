@@ -102,7 +102,7 @@ function CategoryForm({
                 title={label}
                 aria-label={label}
                 onClick={() => setC({ ...c, icon: key })}
-                className={`flex size-11 items-center justify-center rounded-lg border ${c.icon === key ? 'border-ink bg-[#f1f5f9] text-ink' : 'border-[#e8e8e8] text-slate-500'}`}
+                className={`flex size-11 items-center justify-center rounded-lg border ${c.icon === key ? 'border-ink bg-surface-strong text-ink' : 'border-hairline text-slate-500'}`}
               >
                 <CategoryIcon name={key} className="size-5" />
               </button>

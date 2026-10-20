@@ -47,9 +47,9 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-(--margin) py-8">
+    <div className="mx-auto max-w-5xl px-(--gutter) py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-ink">
+        <h1 className="display-md text-ink">
           Olá{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}!
         </h1>
         <div className="flex flex-wrap gap-2">

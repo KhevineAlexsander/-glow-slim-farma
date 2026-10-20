@@ -79,14 +79,12 @@ export default function SignInPage() {
   const title = { entrar: 'Entrar na sua conta', criar: 'Criar conta', recuperar: 'Recuperar senha' }[mode]
 
   return (
-    <div className="mx-auto max-w-md px-(--margin) py-12">
-      <div>
-        <div className="mb-5 flex items-center gap-3">
-          <h1 className="text-2xl font-semibold text-ink">{title}</h1>
-        </div>
+    <div className="mx-auto max-w-md px-(--gutter) py-12 lg:py-16">
+      <div className="card p-6 sm:p-8">
+        <h1 className="title-lg mb-6 text-ink">{title}</h1>
 
         {mode !== 'recuperar' && (
-          <div className="mb-5 grid grid-cols-2 rounded-full bg-[#f1f5f9] p-1" role="tablist">
+          <div className="mb-5 grid grid-cols-2 rounded-full bg-surface-strong p-1" role="tablist">
             {(['entrar', 'criar'] as const).map((m) => (
               <button
                 key={m}
