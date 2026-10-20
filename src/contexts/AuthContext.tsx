@@ -12,10 +12,21 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null)
 
-async function checkAdmin(): Promise<boolean> {
-  // A verificação definitiva é a RLS no banco; isto só controla a interface.
-  const { data, error } = await supabase.rpc('is_admin')
-  return !error && data === true
+// Uma verificação por usuário: o login e o evento SIGNED_IN pedem ao mesmo tempo,
+// e repetir a chamada só dobra a chance de pegar uma resposta lenta do servidor.
+let adminCheck: { userId: string; result: Promise<boolean> } | null = null
+
+async function checkAdmin(userId: string): Promise<boolean> {
+  if (adminCheck?.userId !== userId) {
+    // A verificação definitiva é a RLS no banco; isto só controla a interface.
+    const result = Promise.resolve(supabase.rpc('is_admin')).then(({ data, error }) => !error && data === true)
+    adminCheck = { userId, result }
+    // Falha de rede não fica guardada: a próxima tentativa consulta de novo.
+    void result.then((ok) => {
+      if (!ok && adminCheck?.result === result) adminCheck = null
+    })
+  }
+  return adminCheck.result
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -26,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true
     const update = async (s: Session | null) => {
-      const admin = s ? await checkAdmin() : false
+      const admin = s ? await checkAdmin(s.user.id) : false
       if (!active) return
       setSession(s)
       setIsAdmin(admin)
@@ -48,9 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) return 'E-mail ou senha inválidos.'
-    if (!(await checkAdmin())) {
+    if (!(await checkAdmin(data.user.id))) {
       await supabase.auth.signOut()
       return 'Este usuário não tem permissão de administrador.'
     }
@@ -58,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    adminCheck = null
     await supabase.auth.signOut()
   }
 
