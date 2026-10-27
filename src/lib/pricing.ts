@@ -13,6 +13,8 @@ export interface PricingSettings {
   sales_mode: SalesMode
   no_price_label: NoPriceLabel
   whatsapp_number: string | null
+  /** Vende com preço os produtos com prescrição/venda restrita (com aviso e confirmação no carrinho). */
+  sell_restricted: boolean
 }
 
 /** Preço efetivo em centavos (promoção válida tem prioridade). 0 = sem preço. */
@@ -29,6 +31,11 @@ export function hasValidPrice(p: Pick<PricedProduct, 'price_cents' | 'promo_pric
 
 export function isRestricted(p: Pick<PricedProduct, 'requires_prescription' | 'restricted_sale'>): boolean {
   return p.requires_prescription || p.restricted_sale
+}
+
+/** Produto restrito cujo preço fica oculto (venda de restritos desligada no painel). */
+export function priceHidden(p: Pick<PricedProduct, 'requires_prescription' | 'restricted_sale'>, s: Pick<PricingSettings, 'sell_restricted'>): boolean {
+  return isRestricted(p) && !s.sell_restricted
 }
 
 export function noPriceText(label: NoPriceLabel): string {
@@ -53,12 +60,14 @@ export interface ProductDisplay {
 /**
  * Decide o que a vitrine mostra para um produto. Regras:
  * - preço zero nunca aparece como grátis: mostra "Preço sob consulta"/"Consulte pelo WhatsApp";
- * - produtos com prescrição/venda restrita não exibem preço nem entram no checkout normal;
+ * - produtos com prescrição/venda restrita: com a venda de restritos ligada (padrão) exibem preço
+ *   e entram no checkout com aviso; desligada, não exibem preço nem entram no checkout normal;
  * - no modo "pedido", só entram no carrinho produtos com preço válido e sem restrição;
  * - no modo "orçamento", qualquer produto disponível pode ser incluído na solicitação.
  */
 export function productDisplay(p: PricedProduct, s: PricingSettings): ProductDisplay {
   const restricted = isRestricted(p)
+  const hidden = priceHidden(p, s)
   const effective = effectivePriceCents(p)
   const hasPromo = effective > 0 && effective < p.price_cents
 
@@ -67,7 +76,7 @@ export function productDisplay(p: PricedProduct, s: PricingSettings): ProductDis
   let discountPercent: number | null = null
   let priceNote: string | null = null
 
-  if (restricted) {
+  if (hidden) {
     priceNote = 'Venda sob prescrição/avaliação'
   } else if (effective > 0) {
     price = formatBRL(effective)
@@ -89,7 +98,7 @@ export function productDisplay(p: PricedProduct, s: PricingSettings): ProductDis
   } else if (s.sales_mode === 'quote') {
     action = 'add_to_quote'
     actionLabel = 'Adicionar ao orçamento'
-  } else if (!restricted && effective > 0) {
+  } else if (!hidden && effective > 0) {
     action = 'add_to_cart'
     actionLabel = 'Adicionar ao carrinho'
   } else if (canWhatsApp) {

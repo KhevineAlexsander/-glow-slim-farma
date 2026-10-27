@@ -144,7 +144,7 @@ export default function SettingsPage() {
             <Field label="Modo de atendimento">
               <select className="input" value={s.sales_mode} onChange={(e) => set('sales_mode', e.target.value as StoreSettings['sales_mode'])}>
                 <option value="quote">Orçamento — o cliente monta uma lista e envia para cotação</option>
-                <option value="order">Compra — carrinho com pedido (somente produtos com preço e sem restrição)</option>
+                <option value="order">Compra — carrinho com pedido (somente produtos com preço)</option>
               </select>
             </Field>
             <p className="rounded-lg bg-surface-soft p-3 text-xs text-muted">
@@ -163,6 +163,12 @@ export default function SettingsPage() {
                 <option value="whatsapp">“Consulte pelo WhatsApp”</option>
               </select>
             </Field>
+            <Toggle
+              checked={s.sell_restricted}
+              onChange={(v) => set('sell_restricted', v)}
+              label="Vender com preço os produtos com prescrição/venda restrita"
+              description="O preço aparece e o produto entra no carrinho; o cliente confirma que tem a receita e o pedido chega marcado para avaliação do responsável técnico. Desligado, o preço fica oculto e o produto só é consultado pelo WhatsApp."
+            />
             <Field label="Aviso sobre produtos com prescrição/venda restrita">
               <textarea className="input min-h-24 py-2" {...text('restricted_notice', 600)} />
             </Field>

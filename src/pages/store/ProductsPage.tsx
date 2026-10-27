@@ -5,7 +5,7 @@ import { ProductCard } from '../../components/store/ProductCard'
 import { groupColors } from '../../components/store/VialArt'
 import type { StoreOutletContext } from '../../components/store/StoreLayout'
 import { EmptyState, ErrorBox, PageLoader } from '../../components/ui/misc'
-import { effectivePriceCents, isRestricted } from '../../lib/pricing'
+import { effectivePriceCents } from '../../lib/pricing'
 import { buildCategoryTree, groupOf, slugsForCategory } from '../../lib/categoryTree'
 import { fetchCatalog, type CatalogSort } from '../../services/catalog'
 import type { CatalogProduct } from '../../types'
@@ -19,9 +19,9 @@ const FLAGS = {
   ofertas: { key: 'is_offer', label: 'Ofertas' },
 } as const
 
-/** Preço visível para ordenação; produtos sem preço exibido vão para o fim. */
+/** Preço visível para ordenação; produtos sem preço exibido vão para o fim
+ * (o catálogo já devolve 0 quando o preço de um restrito está oculto). */
 function sortablePrice(p: CatalogProduct): number | null {
-  if (isRestricted(p)) return null
   const v = effectivePriceCents(p)
   return v > 0 ? v : null
 }

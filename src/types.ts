@@ -112,6 +112,7 @@ export interface StoreSettings {
   announcement_active: boolean
   sales_mode: SalesMode
   send_to_whatsapp: boolean
+  sell_restricted: boolean
   no_price_label: NoPriceLabel
   restricted_notice: string | null
   show_categories: boolean

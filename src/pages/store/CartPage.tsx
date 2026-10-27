@@ -10,7 +10,7 @@ import { useCategories } from '../../contexts/CategoriesContext'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
 import { buildCategoryTree } from '../../lib/categoryTree'
 import { formatBRL } from '../../lib/money'
-import { effectivePriceCents, isRestricted, productDisplay } from '../../lib/pricing'
+import { effectivePriceCents, isRestricted, priceHidden, productDisplay } from '../../lib/pricing'
 import { friendlyError } from '../../lib/supabase'
 import { onlyDigits, orderMessage, whatsappLink } from '../../lib/whatsapp'
 import { fetchProductsByIds, placeOrder } from '../../services/catalog'
@@ -57,7 +57,7 @@ export default function CartPage() {
       const p = products.get(l.productId)
       const d = p ? productDisplay(p, s) : null
       const valid = Boolean(p && (d!.action === 'add_to_cart' || d!.action === 'add_to_quote'))
-      const unit = p && !isRestricted(p) && effectivePriceCents(p) > 0 ? effectivePriceCents(p) : null
+      const unit = p && !priceHidden(p, s) && effectivePriceCents(p) > 0 ? effectivePriceCents(p) : null
       return { line: l, product: p, valid, unit }
     })
   }, [lines, products, s])

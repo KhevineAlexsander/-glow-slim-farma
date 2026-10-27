@@ -41,6 +41,12 @@ export function PriceBlock({ product, size = 'sm' }: { product: CatalogProduct; 
       <div>
         {d.oldPrice && <p className="tabular text-xs text-muted line-through">{d.oldPrice}</p>}
         <p className={`tabular font-medium whitespace-nowrap text-ink ${size === 'lg' ? 'title-lg' : 'text-lg'}`}>{d.price}</p>
+        {/* restrito à venda: o preço aparece com o lembrete da receita */}
+        {d.restricted && (
+          <p className={`mt-1 flex items-center gap-1 font-medium text-amber-800 ${size === 'lg' ? 'text-sm' : 'text-xs'}`}>
+            <ShieldAlert className="size-3.5 shrink-0" aria-hidden="true" /> Exige receita
+          </p>
+        )}
       </div>
     )
   }

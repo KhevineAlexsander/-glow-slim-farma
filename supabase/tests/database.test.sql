@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Em produção o pgTAP pode estar em outro esquema: procura nos dois.
 set local search_path to public, extensions;
-select plan(57);
+select plan(60);
 
 -- ---------------------------------------------------------------------------
 -- Dados de teste (como postgres, ignorando RLS)
@@ -62,8 +62,9 @@ select throws_ok($$update public.categories set parent_id = '10000000-0000-0000-
 select throws_ok($$insert into public.categories (name, slug, parent_id) values ('Neta', 'neta-pgtap', '10000000-0000-0000-0000-000000000001')$$,
                  '23514', null, 'só um nível de grupo');
 
--- Os testes de orçamento abaixo exigem o modo orçamento (independe do estado do banco)
-update public.store_settings set sales_mode = 'quote';
+-- Os testes de orçamento abaixo exigem o modo orçamento e a venda de restritos
+-- desligada (independe do estado do banco); a venda ligada é testada adiante.
+update public.store_settings set sales_mode = 'quote', sell_restricted = false;
 
 -- Produto publicado dentro de categoria oculta + imagens
 insert into public.categories (id, name, slug, is_visible) values ('10000000-0000-0000-0000-000000000002', 'Oculta pgTAP', 'oculta-pgtap', false);
@@ -156,6 +157,23 @@ select throws_ok(
   $$select public.place_order('{"name":"Bia","phone":"11988887777"}',
     '[{"product_id":"20000000-0000-0000-0000-000000000001","quantity":0}]')$$,
   '22023', null, 'quantidade inválida é rejeitada');
+
+-- Venda de restritos ligada (padrão da loja): preço aparece e o item vai ao checkout
+reset role;
+update public.store_settings set sell_restricted = true;
+set local role anon;
+select is((select price_cents from public.catalog_products where sku = 'P3'), 5000,
+          'venda de restritos ligada: preço do item com prescrição aparece na vitrine');
+select is(
+  (public.place_order('{"name":"Caio","phone":"11955554444"}',
+    '[{"product_id":"20000000-0000-0000-0000-000000000003","quantity":2}]') ->> 'total_cents')::int,
+  10000, 'venda de restritos ligada: item com prescrição passa pelo checkout com o preço do banco');
+reset role;
+select ok((select requires_document_review and not has_unpriced_items and kind = 'order'
+             from public.orders where customer_name = 'Caio'),
+          'pedido com item com prescrição chega marcado para avaliação documental');
+update public.store_settings set sell_restricted = false;
+set local role anon;
 
 -- ---------------------------------------------------------------------------
 -- Usuário autenticado sem permissão

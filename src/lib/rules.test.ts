@@ -13,7 +13,12 @@ const base = {
   requires_prescription: false,
   restricted_sale: false,
 }
-const orderMode: PricingSettings = { sales_mode: 'order', no_price_label: 'consult', whatsapp_number: '5511999999999' }
+const orderMode: PricingSettings = {
+  sales_mode: 'order',
+  no_price_label: 'consult',
+  whatsapp_number: '5511999999999',
+  sell_restricted: false,
+}
 const quoteMode: PricingSettings = { ...orderMode, sales_mode: 'quote' }
 
 describe('money', () => {
@@ -67,6 +72,13 @@ describe('pricing', () => {
     expect(d.price).toBeNull()
     expect(d.restricted).toBe(true)
     expect(d.action).toBe('whatsapp')
+  })
+  it('prescrição com venda de restritos ligada: preço exibido e vai ao carrinho', () => {
+    const d = productDisplay({ ...base, price_cents: 10000, requires_prescription: true }, { ...orderMode, sell_restricted: true })
+    expect(d.price).toContain('100,00')
+    expect(d.restricted).toBe(true)
+    expect(d.priceNote).toBeNull()
+    expect(d.action).toBe('add_to_cart')
   })
   it('modo orçamento aceita qualquer produto disponível', () => {
     expect(productDisplay(base, quoteMode).action).toBe('add_to_quote')
