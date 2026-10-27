@@ -117,7 +117,6 @@ export default function CartPage() {
 
   const validItems = view.filter((v) => v.valid)
   const invalidItems = view.filter((v) => !v.valid)
-  const hasRestricted = validItems.some((v) => v.product && isRestricted(v.product))
   const hasUnpriced = validItems.some((v) => v.unit == null)
   const subtotal = validItems.reduce((sum, v) => sum + (v.unit ?? 0) * v.line.quantity, 0)
   const itemCount = validItems.reduce((n, v) => n + v.line.quantity, 0)
@@ -199,7 +198,6 @@ export default function CartPage() {
       <h1 className="display-md text-ink">{title}</h1>
       <p className="mt-1 text-sm text-muted">
         {itemCount} {itemCount === 1 ? 'item' : 'itens'}
-        {hasRestricted ? ' · alguns exigem prescrição/avaliação' : ''}
       </p>
 
       <div className="mt-6 grid items-start gap-8 lg:grid-cols-[1fr_400px]">
@@ -246,7 +244,7 @@ export default function CartPage() {
                       )}
                       {product && isRestricted(product) && (
                         <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-800">
-                          <ShieldAlert className="size-3.5" aria-hidden="true" /> Exige prescrição/avaliação
+                          <ShieldAlert className="size-3.5" aria-hidden="true" /> Exige receita
                         </p>
                       )}
                     </div>
@@ -337,10 +335,6 @@ export default function CartPage() {
             <input type="checkbox" className="size-5 shrink-0 accent-[var(--ink)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             Concordo que meus dados sejam usados somente para o atendimento desta solicitação.
           </label>
-          {/* sem confirmação aqui: a receita é pedida pela loja na conversa do WhatsApp */}
-          {hasRestricted && (
-            <p className="text-xs text-amber-900">Alguns itens exigem receita: a loja vai pedir pelo WhatsApp.</p>
-          )}
 
           {error && <ErrorBox message={error} />}
           {session ? (

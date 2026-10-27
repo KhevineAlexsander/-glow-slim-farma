@@ -15,6 +15,7 @@ import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth } from '../../contexts/AuthContext'
 import { useSettings } from '../../contexts/SettingsContext'
+import { BrandLogo } from '../store/Logo'
 import { PageLoader } from '../ui/misc'
 
 const NAV = [
@@ -71,7 +72,11 @@ function AdminLayout() {
   // O produto e o escopo no topo da moldura: a marca (o logo já traz o nome) e "Painel"
   const brand = (
     <div className="flex flex-col items-start gap-1 px-2">
-      <img src={settings?.logo_url || '/logo.svg'} alt={settings?.store_name ?? 'Loja'} className="h-10 w-auto" />
+      {settings?.logo_url ? (
+        <img src={settings.logo_url} alt={settings.store_name} className="h-10 w-auto" />
+      ) : (
+        <BrandLogo name={settings?.store_name ?? 'Glow Slim Farma'} size="sm" />
+      )}
       <span className="text-xs text-muted">Painel administrativo</span>
     </div>
   )

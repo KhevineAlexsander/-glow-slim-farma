@@ -103,7 +103,7 @@ export function Header({ categories }: { categories: Category[] }) {
             }}
           >
             <div className="mb-6 flex items-center justify-between">
-              <Logo className="h-10" />
+              <Logo className="h-10" size="sm" />
               <button className="btn-ghost size-11 px-0" onClick={() => setOpen(false)} aria-label="Fechar menu">
                 <X className="size-6" />
               </button>
