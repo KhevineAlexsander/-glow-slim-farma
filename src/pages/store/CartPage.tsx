@@ -35,7 +35,6 @@ export default function CartPage() {
     }))
   }, [session, profile])
   const [consent, setConsent] = useState(false)
-  const [rxAware, setRxAware] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [placed, setPlaced] = useState<{ order: PlacedOrder; name: string } | null>(null)
@@ -169,7 +168,6 @@ export default function CartPage() {
     const phone = onlyDigits(form.phone)
     if (phone.length < 10 || phone.length > 15) return setError('Informe um WhatsApp/telefone válido com DDD.')
     if (!consent) return setError('É preciso concordar com o uso dos seus dados para o atendimento.')
-    if (hasRestricted && !rxAware) return setError('Confirme a ciência sobre a necessidade de prescrição.')
 
     // Finalização pelo WhatsApp: a aba é aberta já no toque do botão (senão o navegador
     // bloqueia o pop-up depois da espera) e recebe o link quando o pedido é registrado.
@@ -339,12 +337,9 @@ export default function CartPage() {
             <input type="checkbox" className="size-5 shrink-0 accent-[var(--ink)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             Concordo que meus dados sejam usados somente para o atendimento desta solicitação.
           </label>
+          {/* sem confirmação aqui: a receita é pedida pela loja na conversa do WhatsApp */}
           {hasRestricted && (
-            <label className="flex min-h-11 items-center gap-3 py-1 text-xs text-amber-900">
-              <input type="checkbox" className="size-5 shrink-0 accent-[var(--ink)]" checked={rxAware} onChange={(e) => setRxAware(e.target.checked)} />
-              Estou ciente de que itens com prescrição/venda restrita só serão fornecidos após apresentação de receita ou
-              documentação e avaliação do responsável técnico.
-            </label>
+            <p className="text-xs text-amber-900">Alguns itens exigem receita: a loja vai pedir pelo WhatsApp.</p>
           )}
 
           {error && <ErrorBox message={error} />}

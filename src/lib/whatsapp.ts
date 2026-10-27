@@ -51,7 +51,7 @@ export function orderMessage(storeName: string, order: PlacedOrder, customerName
     )
   }
   if (order.requires_document_review) {
-    lines.push('Estou ciente de que itens com prescrição exigem envio de receita/documentação para avaliação.')
+    lines.push('Alguns itens exigem receita: combinamos o envio por aqui.')
   }
   return lines.join('\n')
 }
