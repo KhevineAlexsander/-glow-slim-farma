@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Em produção o pgTAP pode estar em outro esquema: procura nos dois.
 set local search_path to public, extensions;
-select plan(60);
+select plan(62);
 
 -- ---------------------------------------------------------------------------
 -- Dados de teste (como postgres, ignorando RLS)
@@ -64,7 +64,7 @@ select throws_ok($$insert into public.categories (name, slug, parent_id) values 
 
 -- Os testes de orçamento abaixo exigem o modo orçamento e a venda de restritos
 -- desligada (independe do estado do banco); a venda ligada é testada adiante.
-update public.store_settings set sales_mode = 'quote', sell_restricted = false;
+update public.store_settings set sales_mode = 'quote', sell_restricted = false, min_order_cents = 0;
 
 -- Produto publicado dentro de categoria oculta + imagens
 insert into public.categories (id, name, slug, is_visible) values ('10000000-0000-0000-0000-000000000002', 'Oculta pgTAP', 'oculta-pgtap', false);
@@ -173,6 +173,20 @@ select ok((select requires_document_review and not has_unpriced_items and kind =
              from public.orders where customer_name = 'Caio'),
           'pedido com item com prescrição chega marcado para avaliação documental');
 update public.store_settings set sell_restricted = false;
+
+-- Pedido mínimo (R$ 180,00): conferido no banco ao gravar o pedido
+update public.store_settings set min_order_cents = 18000;
+set local role anon;
+select throws_ok(
+  $$select public.place_order('{"name":"Dani","phone":"11944443333"}',
+    '[{"product_id":"20000000-0000-0000-0000-000000000001","quantity":1}]')$$,
+  '22023', 'O pedido mínimo é de R$ 180,00.', 'pedido abaixo do mínimo é recusado');
+select is(
+  (public.place_order('{"name":"Dani","phone":"11944443333"}',
+    '[{"product_id":"20000000-0000-0000-0000-000000000001","quantity":3}]') ->> 'total_cents')::int,
+  24000, 'pedido que atinge o mínimo é aceito');
+reset role;
+update public.store_settings set min_order_cents = 0;
 set local role anon;
 
 -- ---------------------------------------------------------------------------

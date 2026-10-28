@@ -119,6 +119,9 @@ export default function CartPage() {
   const invalidItems = view.filter((v) => !v.valid)
   const hasUnpriced = validItems.some((v) => v.unit == null)
   const subtotal = validItems.reduce((sum, v) => sum + (v.unit ?? 0) * v.line.quantity, 0)
+  // Pedido mínimo só vale para compras (o banco confere de novo ao gravar)
+  const minOrder = isQuote ? 0 : (s.min_order_cents ?? 0)
+  const missing = Math.max(0, minOrder - subtotal)
   const itemCount = validItems.reduce((n, v) => n + v.line.quantity, 0)
 
   if (!lines.length) {
@@ -167,6 +170,7 @@ export default function CartPage() {
     const phone = onlyDigits(form.phone)
     if (phone.length < 10 || phone.length > 15) return setError('Informe um WhatsApp/telefone válido com DDD.')
     if (!consent) return setError('É preciso concordar com o uso dos seus dados para o atendimento.')
+    if (missing > 0) return setError(`O pedido mínimo é de ${formatBRL(minOrder)}.`)
 
     // Finalização pelo WhatsApp: a aba é aberta já no toque do botão (senão o navegador
     // bloqueia o pop-up depois da espera) e recebe o link quando o pedido é registrado.
@@ -307,6 +311,23 @@ export default function CartPage() {
                 ? 'Os valores finais serão confirmados pela loja na resposta ao orçamento.'
                 : 'O valor é recalculado e confirmado pela loja. Frete e pagamento são combinados no atendimento.'}
             </p>
+            {minOrder > 0 && (
+              <div className="mt-3">
+                <div className="flex items-baseline justify-between gap-3 text-xs text-body">
+                  <span>Pedido mínimo {formatBRL(minOrder)}</span>
+                  <span className={`tabular font-semibold ${missing > 0 ? 'text-ink' : 'text-[#247b50]'}`}>
+                    {missing > 0 ? `Faltam ${formatBRL(missing)}` : 'Mínimo atingido'}
+                  </span>
+                </div>
+                {/* barra na proporção real do mínimo */}
+                <div className="mt-1.5 h-1.5 rounded-full bg-surface-strong" aria-hidden="true">
+                  <div
+                    className={`h-1.5 rounded-full ${missing > 0 ? 'bg-brand-dark' : 'bg-[#247b50]'}`}
+                    style={{ width: `${Math.min(100, (subtotal / minOrder) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <h2 className="text-base font-medium text-ink">Seus dados</h2>
@@ -351,7 +372,7 @@ export default function CartPage() {
           <button
             type="submit"
             className={finishOnWhatsApp ? 'btn-whatsapp w-full' : 'btn-primary w-full'}
-            disabled={submitting || !validItems.length}
+            disabled={submitting || !validItems.length || missing > 0}
           >
             {finishOnWhatsApp && !submitting && <MessageCircle className="size-5" aria-hidden="true" />}
             {submitting

@@ -113,6 +113,8 @@ export interface StoreSettings {
   sales_mode: SalesMode
   send_to_whatsapp: boolean
   sell_restricted: boolean
+  /** Pedido mínimo em centavos para compras (0 = sem mínimo). */
+  min_order_cents: number
   no_price_label: NoPriceLabel
   restricted_notice: string | null
   show_categories: boolean

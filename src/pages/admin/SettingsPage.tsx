@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { AdminPageHeader } from '../../components/admin/AdminLayout'
 import { ImageInput } from '../../components/admin/ImageInput'
 import { ErrorBox, PageLoader, Toggle } from '../../components/ui/misc'
+import { centsToInput, parseBRLToCents } from '../../lib/money'
 import { useToast } from '../../components/ui/Toast'
 import { useSettings } from '../../contexts/SettingsContext'
 import { friendlyError } from '../../lib/supabase'
@@ -157,6 +158,19 @@ export default function SettingsPage() {
               label="Oferecer envio do resumo pelo WhatsApp após o pedido"
               description="Requer número de WhatsApp na aba Contato."
             />
+            <Field label="Pedido mínimo (R$)" hint="Vale para compras. Deixe 0 para não ter mínimo.">
+              <input
+                className="input max-w-40"
+                inputMode="decimal"
+                defaultValue={centsToInput(s.min_order_cents)}
+                // converte ao sair do campo (formatar a cada tecla atrapalharia a digitação)
+                onBlur={(e) => {
+                  const cents = parseBRLToCents(e.target.value) ?? 0
+                  set('min_order_cents', cents)
+                  e.target.value = centsToInput(cents)
+                }}
+              />
+            </Field>
             <Field label="Como exibir produtos sem preço">
               <select className="input" value={s.no_price_label} onChange={(e) => set('no_price_label', e.target.value as StoreSettings['no_price_label'])}>
                 <option value="consult">“Preço sob consulta”</option>
