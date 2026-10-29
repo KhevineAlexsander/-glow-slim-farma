@@ -1,4 +1,6 @@
 import {
+  Bell,
+  BellRing,
   ExternalLink,
   FileUp,
   Image,
@@ -9,6 +11,8 @@ import {
   Settings,
   ShoppingBag,
   Tags,
+  Volume2,
+  VolumeX,
   Wallet,
   X,
 } from 'lucide-react'
@@ -16,6 +20,7 @@ import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth } from '../../contexts/AuthContext'
 import { useSettings } from '../../contexts/SettingsContext'
+import { orderAlertText, useOrderAlerts } from '../../lib/orderAlerts'
 import { BrandLogo } from '../store/Logo'
 import { PageLoader } from '../ui/misc'
 
@@ -44,13 +49,16 @@ function AdminLayout() {
   const { settings } = useSettings()
   const [open, setOpen] = useState(false)
   const location = useLocation()
+  const alerts = useOrderAlerts(true)
 
   useEffect(() => {
     setOpen(false)
   }, [location.pathname])
+  // A aba do navegador mostra quantos pedidos esperam resposta
   useEffect(() => {
-    document.title = `Painel | ${settings?.store_name ?? 'Loja'}`
-  }, [settings?.store_name, location.pathname])
+    const n = alerts.newCount
+    document.title = `${n > 0 ? `(${n}) Novo pedido · ` : ''}Painel | ${settings?.store_name ?? 'Loja'}`
+  }, [settings?.store_name, location.pathname, alerts.newCount])
 
   const nav = (
     <nav className="flex flex-col gap-0.5" aria-label="Painel">
@@ -66,6 +74,14 @@ function AdminLayout() {
           }
         >
           <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" /> {label}
+          {to === '/admin/pedidos' && alerts.newCount > 0 && (
+            <span
+              className="tabular ml-auto rounded-full bg-[#c4242a] px-2 py-0.5 text-xs font-semibold text-white"
+              aria-label={`${alerts.newCount} pedidos novos`}
+            >
+              {alerts.newCount}
+            </span>
+          )}
         </NavLink>
       ))}
     </nav>
@@ -85,7 +101,28 @@ function AdminLayout() {
 
   const footer = (
     <div className="mt-auto space-y-0.5 pt-4">
-      <p className="truncate px-3 pb-1 text-xs text-muted">{session?.user.email}</p>
+      {/* aviso de pedido novo: som e notificação do sistema */}
+      <button
+        onClick={() => alerts.setSound(!alerts.sound)}
+        className="flex min-h-11 w-full items-center gap-2.5 rounded-full px-3 text-sm text-muted hover:text-ink lg:min-h-9"
+        aria-pressed={alerts.sound}
+      >
+        {alerts.sound ? (
+          <Volume2 className="size-4" strokeWidth={1.75} aria-hidden="true" />
+        ) : (
+          <VolumeX className="size-4" strokeWidth={1.75} aria-hidden="true" />
+        )}
+        Som de pedido: {alerts.sound ? 'ligado' : 'desligado'}
+      </button>
+      {alerts.permission === 'default' && (
+        <button
+          onClick={() => void alerts.requestPermission()}
+          className="flex min-h-11 w-full items-center gap-2.5 rounded-full px-3 text-sm text-muted hover:text-ink lg:min-h-9"
+        >
+          <Bell className="size-4" strokeWidth={1.75} aria-hidden="true" /> Ativar notificações
+        </button>
+      )}
+      <p className="truncate px-3 pt-2 pb-1 text-xs text-muted">{session?.user.email}</p>
       <Link to="/" target="_blank" className="flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm text-muted hover:text-ink lg:min-h-9">
         <ExternalLink className="size-4" strokeWidth={1.75} aria-hidden="true" /> Ver loja
       </Link>
@@ -130,6 +167,35 @@ function AdminLayout() {
             {nav}
             {footer}
           </aside>
+        </div>
+      )}
+
+      {/* Alertas de pedido novo (sobrepõem a tela no canto, até 4) */}
+      {alerts.alerts.length > 0 && (
+        <div className="fixed top-3 right-3 left-3 z-[70] flex flex-col items-end gap-2 sm:left-auto sm:w-96" role="status" aria-live="assertive">
+          {alerts.alerts.map((o) => (
+            <div key={o.id} className="flex w-full items-start gap-3 rounded-2xl border border-hairline bg-white p-4 shadow-lg">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-dark text-white">
+                <BellRing className="size-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-ink">
+                  Novo {o.kind === 'order' ? 'pedido' : 'orçamento'} <span className="tabular">#{o.order_number}</span>
+                </p>
+                <p className="truncate text-sm text-body">{orderAlertText(o)}</p>
+                <Link
+                  to={`/admin/pedidos/${o.id}`}
+                  onClick={() => alerts.dismiss(o.id)}
+                  className="mt-2 inline-flex min-h-9 items-center text-sm font-semibold text-brand-dark hover:underline"
+                >
+                  Ver pedido
+                </Link>
+              </div>
+              <button onClick={() => alerts.dismiss(o.id)} className="-m-1 flex size-9 shrink-0 items-center justify-center rounded-full text-body hover:bg-surface-strong" aria-label="Fechar aviso">
+                <X className="size-4" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
 

@@ -300,3 +300,34 @@ export async function updateOrder(
   if (error) throw error
   return data as Order
 }
+
+// -----------------------------------------------------------------------------
+// Alertas de pedido novo (o painel consulta a cada poucos segundos)
+// -----------------------------------------------------------------------------
+export type OrderAlert = Pick<Order, 'id' | 'order_number' | 'kind' | 'customer_name' | 'total_cents' | 'has_unpriced_items' | 'created_at'>
+
+/** Pedidos criados depois de `since` (ISO), do mais antigo para o mais novo. */
+export async function fetchOrdersSince(since: string): Promise<OrderAlert[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id, order_number, kind, customer_name, total_cents, has_unpriced_items, created_at')
+    .gt('created_at', since)
+    .order('created_at', { ascending: true })
+    .limit(20)
+  if (error) throw error
+  return data as OrderAlert[]
+}
+
+/** Momento do pedido mais recente (ponto de partida dos alertas, pelo relógio do banco). */
+export async function latestOrderAt(): Promise<string> {
+  const { data, error } = await supabase.from('orders').select('created_at').order('created_at', { ascending: false }).limit(1)
+  if (error) throw error
+  return data?.[0]?.created_at ?? new Date(0).toISOString()
+}
+
+/** Quantos pedidos estão com status "Novo" (a fila que precisa de resposta). */
+export async function countNewOrders(): Promise<number> {
+  const { count, error } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'new')
+  if (error) throw error
+  return count ?? 0
+}
