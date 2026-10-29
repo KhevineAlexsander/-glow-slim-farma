@@ -9,6 +9,7 @@ import { ErrorBox, PageLoader } from '../ui/misc'
 import { BottomNav } from './BottomNav'
 import { Footer } from './Footer'
 import { Header } from './Header'
+import { InstallBar } from './InstallApp'
 
 export interface StoreOutletContext {
   categories: Category[]
@@ -51,6 +52,7 @@ export function StoreLayout() {
     <CategoriesContext.Provider value={categories}>
       <div className="flex min-h-dvh flex-col">
         <Header categories={categories} />
+        <InstallBar />
         <main className="flex-1">
           <Suspense fallback={<PageLoader />}>
             <Outlet context={{ categories } satisfies StoreOutletContext} />

@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { Link } from 'react-router'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
 import { whatsappLink } from '../../lib/whatsapp'
+import { InstallButton } from './InstallApp'
 
 function formatPhone(digits: string) {
   const d = digits.replace(/^55/, '')
@@ -71,6 +72,7 @@ export function Footer() {
         <div className="col-span-2 md:col-span-1">
           <p className="text-lg font-semibold text-ink">{s.store_name}</p>
           {s.slogan && <p className="mt-1 max-w-[28ch] text-sm text-body">{s.slogan}</p>}
+          <InstallButton className="btn-outline mt-5 min-h-10 px-4 text-sm" />
         </div>
         {columns.map((c) => (
           <nav key={c.title} aria-label={c.title}>

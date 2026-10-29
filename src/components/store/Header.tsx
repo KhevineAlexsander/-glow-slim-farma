@@ -9,6 +9,7 @@ import type { Category } from '../../types'
 import { buildCategoryTree } from '../../lib/categoryTree'
 import { Logo } from './Logo'
 import { SearchBar } from './SearchBar'
+import { InstallButton } from './InstallApp'
 import { groupColors } from './VialArt'
 
 export function Header({ categories }: { categories: Category[] }) {
@@ -147,6 +148,7 @@ export function Header({ categories }: { categories: Category[] }) {
                 </nav>
               </>
             )}
+            <InstallButton className="btn-primary mt-6 w-full" />
             <Link
               to="/admin/login"
               className="mt-auto flex min-h-11 items-center gap-2 px-3 pt-6 text-sm font-medium text-muted hover:text-ink"
