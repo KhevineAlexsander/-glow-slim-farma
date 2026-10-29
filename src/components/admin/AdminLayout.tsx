@@ -9,6 +9,7 @@ import {
   Settings,
   ShoppingBag,
   Tags,
+  Wallet,
   X,
 } from 'lucide-react'
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
@@ -24,6 +25,7 @@ const NAV = [
   { to: '/admin/categorias', label: 'Categorias', icon: Tags },
   { to: '/admin/banners', label: 'Banners', icon: Image },
   { to: '/admin/pedidos', label: 'Pedidos', icon: ShoppingBag },
+  { to: '/admin/pedido-minimo', label: 'Pedido mínimo', icon: Wallet },
   { to: '/admin/importar', label: 'Importar', icon: FileUp },
   { to: '/admin/configuracoes', label: 'Configurações', icon: Settings },
 ]
