@@ -42,7 +42,7 @@ export function noPriceText(label: NoPriceLabel): string {
   return label === 'whatsapp' ? 'Consulte pelo WhatsApp' : 'Preço sob consulta'
 }
 
-export type ProductAction = 'add_to_cart' | 'add_to_quote' | 'whatsapp' | 'unavailable' | 'none'
+export type ProductAction = 'add_to_cart' | 'add_to_quote' | 'unavailable' | 'none'
 
 export interface ProductDisplay {
   /** Preço formatado a exibir, ou null quando não deve ser exibido. */
@@ -88,7 +88,6 @@ export function productDisplay(p: PricedProduct, s: PricingSettings): ProductDis
     priceNote = noPriceText(s.no_price_label)
   }
 
-  const canWhatsApp = Boolean(s.whatsapp_number)
   let action: ProductAction
   let actionLabel: string
 
@@ -101,10 +100,9 @@ export function productDisplay(p: PricedProduct, s: PricingSettings): ProductDis
   } else if (!hidden && effective > 0) {
     action = 'add_to_cart'
     actionLabel = 'Adicionar ao carrinho'
-  } else if (canWhatsApp) {
-    action = 'whatsapp'
-    actionLabel = 'Consultar no WhatsApp'
   } else {
+    // Sem botão de "consultar no WhatsApp": a compra é sempre pelo carrinho, e o
+    // WhatsApp recebe o resumo do pedido. Produto sem preço não tem botão.
     action = 'none'
     actionLabel = ''
   }

@@ -20,11 +20,6 @@ export function whatsappLink(number: string, text?: string): string {
   return text ? `${base}?text=${encodeURIComponent(text)}` : base
 }
 
-export function productInquiryMessage(storeName: string, productName: string, sku?: string | null): string {
-  const ref = sku ? ` (ref. ${sku})` : ''
-  return `Olá, ${storeName}! Gostaria de informações sobre o produto: ${productName}${ref}.`
-}
-
 /** Resumo do pedido para o WhatsApp — usa os valores devolvidos pelo banco. */
 export function orderMessage(storeName: string, order: PlacedOrder, customerName: string): string {
   const title = order.kind === 'order' ? 'Pedido' : 'Solicitação de orçamento'

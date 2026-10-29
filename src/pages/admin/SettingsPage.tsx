@@ -70,7 +70,8 @@ export default function SettingsPage() {
     const patch: Partial<StoreSettings> = {}
     for (const [k, v] of Object.entries(s)) {
       // pedido mínimo tem tela própria (Pedido mínimo): não é salvo aqui
-      if (k === 'id' || k === 'updated_at' || k === 'min_order_cents') continue
+      // venda com preço de produtos com receita fica sempre ligada (não há consulta pelo WhatsApp)
+      if (k === 'id' || k === 'updated_at' || k === 'min_order_cents' || k === 'sell_restricted') continue
       ;(patch as Record<string, unknown>)[k] = typeof v === 'string' ? v.trim() || null : v
     }
     patch.whatsapp_number = whatsapp || null
@@ -164,12 +165,6 @@ export default function SettingsPage() {
                 <option value="whatsapp">“Consulte pelo WhatsApp”</option>
               </select>
             </Field>
-            <Toggle
-              checked={s.sell_restricted}
-              onChange={(v) => set('sell_restricted', v)}
-              label="Vender com preço os produtos com prescrição/venda restrita"
-              description="O preço aparece e o produto entra no carrinho; o cliente confirma que tem a receita e o pedido chega marcado para avaliação do responsável técnico. Desligado, o preço fica oculto e o produto só é consultado pelo WhatsApp."
-            />
             <Field label="Aviso sobre produtos com prescrição/venda restrita">
               <textarea className="input min-h-24 py-2" {...text('restricted_notice', 600)} />
             </Field>

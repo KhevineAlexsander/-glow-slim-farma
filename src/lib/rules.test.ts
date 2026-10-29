@@ -47,7 +47,7 @@ describe('pricing', () => {
     const d = productDisplay(base, orderMode)
     expect(d.price).toBeNull()
     expect(d.priceNote).toBe('Preço sob consulta')
-    expect(d.action).toBe('whatsapp')
+    expect(d.action).toBe('none')
     expect(productDisplay(base, { ...orderMode, no_price_label: 'whatsapp' }).priceNote).toBe('Consulte pelo WhatsApp')
   })
   it('sem preço e sem WhatsApp não gera botão quebrado', () => {
@@ -71,7 +71,7 @@ describe('pricing', () => {
     const d = productDisplay({ ...base, price_cents: 10000, requires_prescription: true }, orderMode)
     expect(d.price).toBeNull()
     expect(d.restricted).toBe(true)
-    expect(d.action).toBe('whatsapp')
+    expect(d.action).toBe('none')
   })
   it('prescrição com venda de restritos ligada: preço exibido e vai ao carrinho', () => {
     const d = productDisplay({ ...base, price_cents: 10000, requires_prescription: true }, { ...orderMode, sell_restricted: true })

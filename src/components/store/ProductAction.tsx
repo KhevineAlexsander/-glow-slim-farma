@@ -1,8 +1,7 @@
-import { MessageCircle, ShoppingCart } from 'lucide-react'
+import { ShoppingCart } from 'lucide-react'
 import { useCart } from '../../contexts/CartContext'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
 import { productDisplay } from '../../lib/pricing'
-import { productInquiryMessage, whatsappLink } from '../../lib/whatsapp'
 import type { CatalogProduct } from '../../types'
 import { useToast } from '../ui/Toast'
 
@@ -46,21 +45,6 @@ export function ProductAction({
     )
   }
 
-  if (d.action === 'whatsapp' && s.whatsapp_number) {
-    return (
-      <a
-        href={whatsappLink(s.whatsapp_number, productInquiryMessage(s.store_name, product.name, product.sku))}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={compact ? COMPACT : `btn-whatsapp w-full${big}`}
-        aria-label={d.actionLabel}
-        title={d.actionLabel}
-      >
-        <MessageCircle className={`size-5 ${compact ? 'text-brand-dark' : ''}`} aria-hidden="true" />
-        {compact ? 'Consultar' : d.actionLabel}
-      </a>
-    )
-  }
 
   if (d.action === 'unavailable') {
     if (compact) return <p className="flex min-h-11 items-center text-sm text-muted">Indisponível</p>
