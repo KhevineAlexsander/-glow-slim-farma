@@ -89,7 +89,7 @@ describe('pricing', () => {
 describe('senha', () => {
   it('exige 8+ caracteres com letras e números', () => {
     expect(strongPassword('vanessa@147')).toBe(true)
-    expect(strongPassword('Aa88176895')).toBe(true)
+    expect(strongPassword('Exemplo2026')).toBe(true)
     expect(strongPassword('12345678')).toBe(false)
     expect(strongPassword('abcdefgh')).toBe(false)
     expect(strongPassword('abc123')).toBe(false)
