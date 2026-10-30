@@ -295,7 +295,16 @@ export async function getOrder(id: string) {
 export type OrderPatch = Partial<
   Pick<
     Order,
-    'status' | 'admin_notes' | 'documents_verified' | 'customer_name' | 'customer_phone' | 'customer_email' | 'customer_city' | 'notes'
+    | 'status'
+    | 'admin_notes'
+    | 'documents_verified'
+    | 'customer_name'
+    | 'customer_phone'
+    | 'customer_email'
+    | 'customer_city'
+    | 'notes'
+    | 'kind'
+    | 'created_at'
   >
 >
 
@@ -305,9 +314,9 @@ export async function updateOrder(id: string, patch: OrderPatch): Promise<Order>
   return data as Order
 }
 
-/** Exclui o pedido (itens e histórico saem junto). */
-export async function deleteOrder(id: string) {
-  const { error } = await supabase.from('orders').delete().eq('id', id)
+/** Exclui o pedido (itens e histórico saem junto). O banco confere a senha de exclusão. */
+export async function deleteOrder(id: string, pin: string) {
+  const { error } = await supabase.rpc('admin_delete_order', { p_order_id: id, p_pin: pin })
   if (error) throw error
 }
 

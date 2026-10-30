@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Em produção o pgTAP pode estar em outro esquema: procura nos dois.
 set local search_path to public, extensions;
-select plan(67);
+select plan(70);
 
 -- ---------------------------------------------------------------------------
 -- Dados de teste (como postgres, ignorando RLS)
@@ -217,8 +217,8 @@ select is((select count(*)::int from public.orders), 1, 'cliente vê o próprio 
 select is((select count(*)::int from public.order_items), 1, 'cliente vê os itens do próprio pedido');
 select is((select count(*)::int from public.order_status_history), 1, 'cliente vê o histórico do próprio pedido');
 
-with d as (delete from public.orders returning 1)
-select is(count(*)::int, 0, 'cliente não exclui pedidos') from d;
+select throws_ok($$select public.admin_delete_order((select id from public.orders limit 1), '8817')$$, '42501', null,
+                 'cliente não exclui pedidos (nem com a senha)');
 
 -- ---------------------------------------------------------------------------
 -- Administrador
@@ -250,10 +250,16 @@ update public.order_items set quantity = 1
  where order_id = (select id from public.orders where customer_name = 'Bia Souza');
 select is((select total_cents from public.orders where customer_name = 'Bia Souza'), 8000,
           'mudar a quantidade recalcula o total do pedido (1 x R$ 80,00)');
-select throws_ok($$update public.orders set kind = 'quote' where customer_name = 'Bia Souza'$$, 'P0001', null,
-                 'tipo do pedido continua travado');
-with d as (delete from public.orders where customer_name = 'Dani' returning 1)
-select is(count(*)::int, 1, 'admin exclui pedido (itens e histórico saem junto)') from d;
+select lives_ok($$update public.orders set kind = 'quote', created_at = created_at - interval '1 day' where customer_name = 'Bia Souza'$$,
+                'admin altera tipo e data do pedido');
+select throws_ok($$delete from public.orders where customer_name = 'Dani'$$, '42501', null,
+                 'exclusão direta, sem senha, é bloqueada');
+select throws_ok($$select public.admin_delete_order((select id from public.orders where customer_name = 'Dani'), '0000')$$,
+                 '28P01', 'Senha incorreta.', 'senha errada não exclui');
+select lives_ok($$select public.admin_delete_order((select id from public.orders where customer_name = 'Dani'), '8817')$$,
+                'admin exclui pedido com a senha');
+select is((select count(*)::int from public.orders where customer_name = 'Dani'), 0,
+          'pedido excluído some (itens e histórico saem junto)');
 
 select * from finish();
 rollback;

@@ -42,6 +42,9 @@ function CustomerCard({ order, onSave }: { order: Order; onSave: (patch: OrderPa
     customer_email: order.customer_email ?? '',
     customer_city: order.customer_city ?? '',
     notes: order.notes ?? '',
+    kind: order.kind,
+    // data/hora local para o campo datetime-local
+    created_at: new Date(new Date(order.created_at).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
   })
   const [error, setError] = useState<string | null>(null)
 
@@ -57,6 +60,8 @@ function CustomerCard({ order, onSave }: { order: Order; onSave: (patch: OrderPa
       customer_email: form.customer_email.trim() || null,
       customer_city: form.customer_city.trim() || null,
       notes: form.notes.trim() || null,
+      kind: form.kind,
+      created_at: new Date(form.created_at).toISOString(),
     })
     if (ok) setEditing(false)
   }
@@ -90,7 +95,7 @@ function CustomerCard({ order, onSave }: { order: Order; onSave: (patch: OrderPa
   const field = (k: keyof typeof form) => ({ value: form[k], onChange: (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value }) })
   return (
     <form onSubmit={submit} className="card space-y-4 p-5">
-      <h2 className="text-base font-medium text-ink">Editar cliente</h2>
+      <h2 className="text-base font-medium text-ink">Editar pedido</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="label">Nome *</span>
@@ -108,6 +113,17 @@ function CustomerCard({ order, onSave }: { order: Order; onSave: (patch: OrderPa
           <span className="label">Cidade</span>
           <input className="input" maxLength={120} {...field('customer_city')} />
         </label>
+        <label className="block">
+          <span className="label">Tipo</span>
+          <select className="input" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as Order['kind'] })}>
+            <option value="order">Pedido</option>
+            <option value="quote">Orçamento</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className="label">Data e hora do pedido</span>
+          <input className="input" type="datetime-local" required {...field('created_at')} />
+        </label>
       </div>
       <label className="block">
         <span className="label">Observações do cliente</span>
@@ -121,6 +137,83 @@ function CustomerCard({ order, onSave }: { order: Order; onSave: (patch: OrderPa
         </button>
       </div>
     </form>
+  )
+}
+
+/** Confirmação de exclusão: pede a senha de exclusão (conferida pelo banco). */
+function DeleteDialog({
+  title,
+  detail,
+  onConfirm,
+  onClose,
+}: {
+  title: string
+  detail: string
+  onConfirm: (pin: string) => Promise<string | null>
+  onClose: () => void
+}) {
+  const [pin, setPin] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!pin) return setError('Digite a senha.')
+    setBusy(true)
+    const err = await onConfirm(pin)
+    setBusy(false)
+    if (err) {
+      setError(err)
+      setPin('')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="excluir-titulo">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <form onSubmit={submit} className="relative w-full max-w-sm space-y-4 rounded-3xl bg-white p-6 shadow-xl">
+        <span className="flex size-11 items-center justify-center rounded-full bg-[#ffedea] text-[#a51a26]">
+          <Trash2 className="size-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h2 id="excluir-titulo" className="text-lg font-semibold text-ink">
+            {title}
+          </h2>
+          <p className="mt-1 text-sm text-body">{detail}</p>
+        </div>
+        <label className="block">
+          <span className="label">Senha de exclusão</span>
+          <input
+            className="input tabular tracking-[0.3em]"
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            autoFocus
+            maxLength={12}
+            value={pin}
+            onChange={(e) => {
+              setPin(e.target.value)
+              setError(null)
+            }}
+          />
+        </label>
+        {error && <ErrorBox message={error} />}
+        <div className="flex gap-2">
+          <button className="btn-danger flex-1" disabled={busy}>
+            {busy ? 'Excluindo…' : 'Excluir pedido'}
+          </button>
+          <button type="button" className="btn-ghost" onClick={onClose}>
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
 
@@ -184,6 +277,7 @@ export default function OrderDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [paper, setPaper] = useState<PaperWidth>(readPaper)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const load = () =>
     getOrder(id)
@@ -228,17 +322,16 @@ export default function OrderDetailPage() {
     requestAnimationFrame(() => window.print())
   }
 
-  const remove = async () => {
-    const label = `${order.kind === 'order' ? 'pedido' : 'orçamento'} #${order.order_number}`
-    if (!window.confirm(`Excluir o ${label} de ${order.customer_name}? Os itens e o histórico também serão apagados. Não dá para desfazer.`)) return
-    setSaving(true)
+  const label = `${order.kind === 'order' ? 'pedido' : 'orçamento'} #${order.order_number}`
+  const remove = async (pin: string): Promise<string | null> => {
     try {
-      await deleteOrder(order.id)
+      await deleteOrder(order.id, pin)
       toast(`${label.charAt(0).toUpperCase() + label.slice(1)} excluído.`)
       navigate('/admin/pedidos', { replace: true })
+      return null
     } catch (e) {
-      toast(friendlyError(e), 'error')
-      setSaving(false)
+      const msg = friendlyError(e)
+      return /senha incorreta/i.test(msg) ? 'Senha incorreta.' : msg
     }
   }
 
@@ -275,7 +368,7 @@ export default function OrderDetailPage() {
           <button className="btn-primary" onClick={() => print(paper)}>
             <Printer className="size-4" aria-hidden="true" /> Imprimir
           </button>
-          <button className="btn-ghost text-[#a51a26] hover:text-[#a51a26]" onClick={() => void remove()} disabled={saving}>
+          <button className="btn-ghost text-[#a51a26] hover:text-[#a51a26]" onClick={() => setConfirmDelete(true)} disabled={saving}>
             <Trash2 className="size-4" aria-hidden="true" /> Excluir
           </button>
         </div>
@@ -403,6 +496,14 @@ export default function OrderDetailPage() {
       </section>
 
       <OrderReceipt order={order} items={items} settings={settings} paper={paper} />
+      {confirmDelete && (
+        <DeleteDialog
+          title={`Excluir ${label}?`}
+          detail={`${order.customer_name} · os itens e o histórico também serão apagados. Não dá para desfazer.`}
+          onConfirm={remove}
+          onClose={() => setConfirmDelete(false)}
+        />
+      )}
     </div>
   )
 }
