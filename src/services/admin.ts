@@ -292,13 +292,50 @@ export async function getOrder(id: string) {
   }
 }
 
-export async function updateOrder(
-  id: string,
-  patch: Partial<Pick<Order, 'status' | 'admin_notes' | 'documents_verified'>>,
-): Promise<Order> {
+export type OrderPatch = Partial<
+  Pick<
+    Order,
+    'status' | 'admin_notes' | 'documents_verified' | 'customer_name' | 'customer_phone' | 'customer_email' | 'customer_city' | 'notes'
+  >
+>
+
+export async function updateOrder(id: string, patch: OrderPatch): Promise<Order> {
   const { data, error } = await supabase.from('orders').update(patch).eq('id', id).select('*').single()
   if (error) throw error
   return data as Order
+}
+
+/** Exclui o pedido (itens e histórico saem junto). */
+export async function deleteOrder(id: string) {
+  const { error } = await supabase.from('orders').delete().eq('id', id)
+  if (error) throw error
+}
+
+// Itens do pedido: o banco recalcula o total da linha e o total do pedido a cada mudança
+export async function updateOrderItem(id: string, patch: { quantity?: number; unit_price_cents?: number | null }) {
+  const { error } = await supabase.from('order_items').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteOrderItem(id: string) {
+  const { error } = await supabase.from('order_items').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Inclui um produto no pedido com o preço atual (promoção válida tem prioridade). */
+export async function addOrderItem(orderId: string, product: Product, quantity = 1) {
+  const promo = product.promo_price_cents
+  const unit = promo != null && promo > 0 && promo < product.price_cents ? promo : product.price_cents
+  const { error } = await supabase.from('order_items').insert({
+    order_id: orderId,
+    product_id: product.id,
+    product_name: product.name,
+    product_sku: product.sku,
+    quantity,
+    unit_price_cents: unit > 0 ? unit : null,
+    requires_prescription: product.requires_prescription || product.restricted_sale,
+  })
+  if (error) throw error
 }
 
 // -----------------------------------------------------------------------------

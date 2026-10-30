@@ -275,3 +275,61 @@ a {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Comprovante para impressora térmica (painel > pedido > Imprimir).
+ * Na tela fica escondido; na impressão é a única coisa no papel.
+ * Largura útil: 72 mm na bobina de 80 mm e 48 mm na de 58 mm.
+ * ------------------------------------------------------------------------- */
+.print-receipt {
+  display: none;
+}
+@media print {
+  @page {
+    margin: 0;
+  }
+  body > *:not(.print-receipt) {
+    display: none !important;
+  }
+  .print-receipt {
+    display: block;
+    margin: 0;
+    padding: 3mm 2mm 8mm;
+    color: #000;
+    background: #fff;
+    font-family: 'Courier New', ui-monospace, monospace;
+    font-size: 11pt;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  .print-receipt.paper-80 {
+    width: 72mm;
+  }
+  .print-receipt.paper-58 {
+    width: 48mm;
+    font-size: 9.5pt;
+  }
+  .print-receipt p {
+    margin: 0;
+  }
+  .print-receipt hr {
+    margin: 2mm 0;
+    border: 0;
+    border-top: 1px dashed #000;
+  }
+  .print-receipt .r-center {
+    text-align: center;
+  }
+  .print-receipt .r-big {
+    font-size: 1.2em;
+    font-weight: 700;
+  }
+  .print-receipt .r-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 2mm;
+  }
+  .print-receipt .r-item + .r-item {
+    margin-top: 1.5mm;
+  }
+}

@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Em produção o pgTAP pode estar em outro esquema: procura nos dois.
 set local search_path to public, extensions;
-select plan(62);
+select plan(67);
 
 -- ---------------------------------------------------------------------------
 -- Dados de teste (como postgres, ignorando RLS)
@@ -217,6 +217,9 @@ select is((select count(*)::int from public.orders), 1, 'cliente vê o próprio 
 select is((select count(*)::int from public.order_items), 1, 'cliente vê os itens do próprio pedido');
 select is((select count(*)::int from public.order_status_history), 1, 'cliente vê o histórico do próprio pedido');
 
+with d as (delete from public.orders returning 1)
+select is(count(*)::int, 0, 'cliente não exclui pedidos') from d;
+
 -- ---------------------------------------------------------------------------
 -- Administrador
 -- ---------------------------------------------------------------------------
@@ -239,6 +242,18 @@ select throws_ok($$update public.orders set total_cents = 1 where customer_name 
                  'valores registrados no pedido não podem ser alterados');
 select throws_ok($$delete from public.products where sku = 'P1'$$, '23503', null,
                  'produto vinculado a pedido não pode ser excluído');
+
+-- Editar e excluir pedidos pelo painel
+select lives_ok($$update public.orders set customer_name = 'Bia Souza', customer_city = 'Imperatriz' where customer_name = 'Bia'$$,
+                'admin edita os dados do cliente');
+update public.order_items set quantity = 1
+ where order_id = (select id from public.orders where customer_name = 'Bia Souza');
+select is((select total_cents from public.orders where customer_name = 'Bia Souza'), 8000,
+          'mudar a quantidade recalcula o total do pedido (1 x R$ 80,00)');
+select throws_ok($$update public.orders set kind = 'quote' where customer_name = 'Bia Souza'$$, 'P0001', null,
+                 'tipo do pedido continua travado');
+with d as (delete from public.orders where customer_name = 'Dani' returning 1)
+select is(count(*)::int, 1, 'admin exclui pedido (itens e histórico saem junto)') from d;
 
 select * from finish();
 rollback;
