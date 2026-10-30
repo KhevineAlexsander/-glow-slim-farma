@@ -97,13 +97,9 @@ function HeroCard({ product, className = '' }: { product: CatalogProduct; classN
 function Hero({
   hero,
   products,
-  storeName,
-  whatsapp,
 }: {
   hero?: Banner
   products: CatalogProduct[]
-  storeName: string
-  whatsapp: string | null
 }) {
   const [front, ...back] = products
   return (
@@ -119,16 +115,6 @@ function Hero({
             <SmartLink to={hero?.button_link || '/produtos'} className="btn-primary btn-lg">
               {hero?.button_label || 'Ver produtos'}
             </SmartLink>
-            {whatsapp && (
-              <a
-                href={whatsappLink(whatsapp, `Olá, ${storeName}!`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline-on-dark btn-lg"
-              >
-                <MessageCircle className="size-5" aria-hidden="true" /> Falar no WhatsApp
-              </a>
-            )}
           </div>
           {/* Fatos do atendimento (como a loja funciona de verdade) */}
           <ul className="mt-10 grid gap-3 text-sm text-on-dark-soft sm:grid-cols-3 sm:gap-6">
@@ -145,9 +131,10 @@ function Hero({
           </ul>
         </div>
 
-        {/* Cards sobrepostos: o da frente é o produto em destaque; os de trás só aparecem no desktop */}
+        {/* Cards sobrepostos (só no desktop): o da frente é o produto em destaque */}
         {front && (
-          <div className="relative mx-auto w-full max-w-sm lg:mr-0">
+          // no celular o card fica de fora: o "como comprar" vem logo abaixo do topo
+          <div className="relative mx-auto hidden w-full max-w-sm lg:mr-0 lg:block">
             {/* camadas de trás: cards escuros elevados, só profundidade (sem conteúdo cortado) */}
             {back.length > 0 && (
               <div className="absolute inset-0 hidden translate-x-14 -translate-y-8 rotate-6 rounded-3xl bg-dark-elevated lg:block" aria-hidden="true" />
@@ -307,7 +294,7 @@ const STEPS = [
 
 function HowItWorks() {
   return (
-    <section className="section-y bg-white" aria-labelledby="como-comprar">
+    <section className="section-y bg-surface-soft" aria-labelledby="como-comprar">
       <div className="wrap">
         <SectionHead id="como-comprar" label="Como comprar" title="Seu pedido em três passos" />
         <ol className="grid gap-4 md:grid-cols-3 lg:gap-6">
@@ -437,7 +424,10 @@ export default function HomePage() {
 
   return (
     <>
-      <Hero hero={hero[0]} products={heroProducts} storeName={s.store_name} whatsapp={s.whatsapp_number} />
+      <Hero hero={hero[0]} products={heroProducts} />
+
+      {/* Como comprar logo no começo: o cliente entende o caminho antes de escolher */}
+      <HowItWorks />
 
       {s.show_categories && tree.length > 0 && <Groups title={s.categories_title} tree={tree} counts={counts} />}
 
@@ -467,8 +457,6 @@ export default function HomePage() {
           )}
         </>
       )}
-
-      <HowItWorks />
 
       {s.show_secondary_banners && secondary[0] && <SecondaryBanner banner={secondary[0]} groups={tree.length} />}
 
