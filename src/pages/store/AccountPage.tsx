@@ -1,4 +1,4 @@
-import { LayoutDashboard, LogOut, ShieldAlert } from 'lucide-react'
+import { LayoutDashboard, LogOut } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router'
 import { Badge, EmptyState, ErrorBox, PageLoader, Spinner } from '../../components/ui/misc'
@@ -96,11 +96,6 @@ export default function AccountPage() {
                       </li>
                     ))}
                   </ul>
-                  {o.requires_document_review && (
-                    <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-amber-800">
-                      <ShieldAlert className="size-3.5" /> Contém itens que exigem prescrição/avaliação.
-                    </p>
-                  )}
                   {o.total_cents > 0 && (
                     <p className="mt-2 text-right tabular text-sm font-semibold text-ink">
                       {o.has_unpriced_items ? 'Subtotal' : 'Total'}: {formatBRL(o.total_cents)}

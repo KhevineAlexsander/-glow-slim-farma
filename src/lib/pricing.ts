@@ -77,7 +77,7 @@ export function productDisplay(p: PricedProduct, s: PricingSettings): ProductDis
   let priceNote: string | null = null
 
   if (hidden) {
-    priceNote = 'Venda sob prescrição/avaliação'
+    priceNote = 'Consulte pelo WhatsApp'
   } else if (effective > 0) {
     price = formatBRL(effective)
     if (hasPromo) {

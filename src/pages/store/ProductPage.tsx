@@ -1,4 +1,4 @@
-import { ChevronRight, Minus, Plus, ShieldAlert } from 'lucide-react'
+import { ChevronRight, Minus, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ProductAction } from '../../components/store/ProductAction'
@@ -122,16 +122,6 @@ export default function ProductPage() {
               </span>
             )}
           </div>
-
-          {d.restricted && (
-            <div className="mt-5 flex gap-2 rounded-2xl bg-[#fffbeb] p-4 text-sm text-[#92400e]">
-              <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-              <p>
-                {product.requires_prescription ? 'Produto sujeito a prescrição. ' : 'Produto de venda restrita. '}
-                {s.restricted_notice}
-              </p>
-            </div>
-          )}
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             {canChooseQty && (

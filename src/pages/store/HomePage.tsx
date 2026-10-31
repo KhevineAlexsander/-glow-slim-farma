@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, MessageCircle, Mail, ShieldCheck, Wallet } from 'lucide-react'
+import { ArrowRight, ChevronRight, MessageCircle, Mail, Wallet } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useOutletContext } from 'react-router'
 import { PriceBlock, ProductCard, ProductImage } from '../../components/store/ProductCard'
@@ -117,16 +117,12 @@ function Hero({
             </SmartLink>
           </div>
           {/* Fatos do atendimento (como a loja funciona de verdade) */}
-          <ul className="mt-10 grid gap-3 text-sm text-on-dark-soft sm:grid-cols-3 sm:gap-6">
+          <ul className="mt-10 grid gap-3 text-sm text-on-dark-soft sm:grid-cols-2 sm:gap-6">
             <li className="flex items-start gap-2">
               <Wallet className="mt-0.5 size-4 shrink-0 text-white" aria-hidden="true" /> Sem pagamento no site
             </li>
             <li className="flex items-start gap-2">
               <MessageCircle className="mt-0.5 size-4 shrink-0 text-white" aria-hidden="true" /> Confirmação pelo WhatsApp
-            </li>
-            <li className="flex items-start gap-2">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-white" aria-hidden="true" /> Receitas avaliadas por
-              responsável técnico
             </li>
           </ul>
         </div>
@@ -308,9 +304,6 @@ function HowItWorks() {
             </Reveal>
           ))}
         </ol>
-        <p className="mt-6 text-sm text-body">
-          Itens com prescrição exigem receita ou documentação, avaliadas pelo responsável técnico.
-        </p>
       </div>
     </section>
   )
@@ -369,7 +362,7 @@ function ContactBand() {
           Fale com a gente
         </Reveal>
         <p className="mx-auto mt-4 max-w-[52ch] text-lg text-on-dark-soft">
-          Tire dúvidas sobre produtos, prescrição e entrega direto com a equipe da {s.store_name}.
+          Tire dúvidas sobre produtos e entrega direto com a equipe da {s.store_name}.
         </p>
         {facts.length > 0 && <p className="mt-4 text-sm text-on-dark-soft">{facts.join(' · ')}</p>}
         <div className="mt-8 flex flex-wrap justify-center gap-3">

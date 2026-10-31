@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, MessageCircle, Minus, Plus, ShieldAlert, Trash2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, MessageCircle, Minus, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { ProductImage } from '../../components/store/ProductCard'
@@ -10,7 +10,7 @@ import { useCategories } from '../../contexts/CategoriesContext'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
 import { buildCategoryTree } from '../../lib/categoryTree'
 import { formatBRL } from '../../lib/money'
-import { effectivePriceCents, isRestricted, priceHidden, productDisplay } from '../../lib/pricing'
+import { effectivePriceCents, priceHidden, productDisplay } from '../../lib/pricing'
 import { friendlyError } from '../../lib/supabase'
 import { onlyDigits, orderMessage, whatsappLink } from '../../lib/whatsapp'
 import { fetchProductsByIds, placeOrder } from '../../services/catalog'
@@ -84,11 +84,6 @@ export default function CartPage() {
             ? 'Seu pedido foi recebido e aguarda confirmação da loja. Nenhum pagamento foi realizado — a loja entrará em contato para combinar pagamento e entrega.'
             : 'Recebemos sua solicitação. A loja vai responder com os valores e a disponibilidade.'}
         </p>
-        {order.requires_document_review && (
-          <p className="mt-4 bg-[#fffbeb] p-4 text-sm text-[#92400e]">
-            Alguns itens exigem prescrição/avaliação. Tenha a receita ou documentação em mãos para enviar à loja.
-          </p>
-        )}
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
           {s.send_to_whatsapp && s.whatsapp_number && (
             <a
@@ -210,7 +205,7 @@ export default function CartPage() {
             <div className="mb-4 flex gap-2 bg-[#fffbeb] p-3 text-sm text-[#92400e]">
               <AlertTriangle className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
               <div>
-                Alguns itens não podem mais ser incluídos (indisponíveis, sem preço ou com venda restrita) e não serão
+                Alguns itens não podem mais ser incluídos (indisponíveis ou sem preço) e não serão
                 enviados.
                 <button
                   className="ml-1 font-semibold underline"
@@ -245,11 +240,6 @@ export default function CartPage() {
                         </Link>
                       ) : (
                         <p className="text-sm font-medium text-muted">Produto indisponível</p>
-                      )}
-                      {product && isRestricted(product) && (
-                        <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-800">
-                          <ShieldAlert className="size-3.5" aria-hidden="true" /> Exige receita
-                        </p>
                       )}
                     </div>
                     <p className="tabular shrink-0 text-right text-sm font-semibold text-ink">

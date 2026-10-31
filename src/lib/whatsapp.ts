@@ -32,9 +32,8 @@ export function orderMessage(storeName: string, order: PlacedOrder, customerName
         i.unit_price_cents != null
           ? ` — ${formatBRL(i.unit_price_cents)} un.`
           : ' — preço a consultar'
-      const rx = i.requires_prescription ? ' (exige prescrição/avaliação)' : ''
       const ref = i.sku ? ` [${i.sku}]` : ''
-      return `• ${i.quantity}x ${i.name}${ref}${price}${rx}`
+      return `• ${i.quantity}x ${i.name}${ref}${price}`
     }),
     '',
   ]
@@ -44,9 +43,6 @@ export function orderMessage(storeName: string, order: PlacedOrder, customerName
         ? `Subtotal dos itens com preço: ${formatBRL(order.total_cents)}`
         : `Total: ${formatBRL(order.total_cents)}`,
     )
-  }
-  if (order.requires_document_review) {
-    lines.push('Alguns itens exigem receita: combinamos o envio por aqui.')
   }
   return lines.join('\n')
 }

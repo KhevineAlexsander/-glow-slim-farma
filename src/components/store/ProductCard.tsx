@@ -1,4 +1,3 @@
-import { ShieldAlert } from 'lucide-react'
 import { Link } from 'react-router'
 import { useCategories } from '../../contexts/CategoriesContext'
 import { useLoadedSettings } from '../../contexts/SettingsContext'
@@ -41,24 +40,16 @@ export function PriceBlock({ product, size = 'sm' }: { product: CatalogProduct; 
       <div>
         {d.oldPrice && <p className="tabular text-xs text-muted line-through">{d.oldPrice}</p>}
         <p className={`tabular font-medium whitespace-nowrap text-ink ${size === 'lg' ? 'title-lg' : 'text-lg'}`}>{d.price}</p>
-        {/* restrito à venda: o preço aparece com o lembrete da receita */}
-        {d.restricted && (
-          <p className={`mt-1 flex items-center gap-1 font-medium text-amber-800 ${size === 'lg' ? 'text-sm' : 'text-xs'}`}>
-            <ShieldAlert className="size-3.5 shrink-0" aria-hidden="true" /> Exige receita
-          </p>
-        )}
       </div>
     )
   }
   return (
     <p
-      className={`flex items-start gap-1 font-medium ${d.restricted ? 'text-amber-800' : 'text-brand-dark'} ${
+      className={`flex items-start gap-1 font-medium text-brand-dark ${
         size === 'lg' ? 'text-lg' : 'text-sm leading-snug'
       }`}
     >
-      {d.restricted && <ShieldAlert className={`shrink-0 ${size === 'lg' ? 'mt-1 size-5' : 'size-4'}`} aria-hidden="true" />}
-      {/* quebra permitida depois da barra ("prescrição/avaliação" não cabe em cards de 320px) */}
-      <span className="min-w-0">{d.priceNote?.replace(/\//g, '/\u200b')}</span>
+      <span className="min-w-0">{d.priceNote}</span>
     </p>
   )
 }
