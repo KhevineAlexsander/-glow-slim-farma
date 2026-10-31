@@ -127,8 +127,16 @@ function Hero({
           </ul>
         </div>
 
-        {/* Cards sobrepostos (só no desktop): o da frente é o produto em destaque */}
-        {front && (
+        {/* Imagem do banner principal (enviada no painel); sem ela, os cards de produto */}
+        {hero?.image_url ? (
+          <img
+            src={hero.image_url}
+            alt={hero.title ?? ''}
+            decoding="async"
+            fetchPriority="high"
+            className="mx-auto w-full max-w-xl rounded-3xl object-contain lg:mr-0"
+          />
+        ) : front && (
           // no celular o card fica de fora: o "como comprar" vem logo abaixo do topo
           <div className="relative mx-auto hidden w-full max-w-sm lg:mr-0 lg:block">
             {/* camadas de trás: cards escuros elevados, só profundidade (sem conteúdo cortado) */}
