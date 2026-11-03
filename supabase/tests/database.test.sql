@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Em produção o pgTAP pode estar em outro esquema: procura nos dois.
 set local search_path to public, extensions;
-select plan(70);
+select plan(77);
 
 -- ---------------------------------------------------------------------------
 -- Dados de teste (como postgres, ignorando RLS)
@@ -260,6 +260,35 @@ select lives_ok($$select public.admin_delete_order((select id from public.orders
                 'admin exclui pedido com a senha');
 select is((select count(*)::int from public.orders where customer_name = 'Dani'), 0,
           'pedido excluído some (itens e histórico saem junto)');
+
+-- Pedido manual pelo painel (admin logado)
+update public.store_settings set min_order_cents = 18000;
+select lives_ok(
+  $$select public.admin_create_order('{"name":"Manual","phone":"(11) 93333-2222","kind":"order"}',
+    '[{"product_id":"20000000-0000-0000-0000-000000000001","quantity":2,"unit_price_cents":1000},
+      {"product_id":"20000000-0000-0000-0000-000000000001","quantity":1,"unit_price_cents":null}]')$$,
+  'pedido manual abaixo do mínimo é aceito para o admin');
+select is((select total_cents from public.orders where customer_name = 'Manual'), 2000,
+          'pedido manual: total vem dos itens, com o preço informado');
+select ok((select has_unpriced_items from public.orders where customer_name = 'Manual'),
+          'pedido manual: item sem preço fica a cotar');
+select is((select user_id from public.orders where customer_name = 'Manual'), null::uuid,
+          'pedido manual não fica na conta do admin');
+select throws_ok(
+  $$select public.admin_create_order('{"name":"Vazio","phone":"11933332222"}', '[]')$$,
+  '22023', 'Inclua ao menos um produto no pedido.', 'pedido manual precisa de item');
+set local role anon;
+select throws_ok(
+  $$select public.place_order('{"name":"Abaixo","phone":"11944443333"}',
+    '[{"product_id":"20000000-0000-0000-0000-000000000001","quantity":1}]')$$,
+  '22023', 'O pedido mínimo é de R$ 180,00.', 'o mínimo continua valendo para a loja');
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-0000000000b2","role":"authenticated"}', true);
+select throws_ok(
+  $$select public.admin_create_order('{"name":"Intruso","phone":"11933332222"}',
+    '[{"product_id":"20000000-0000-0000-0000-000000000001","quantity":1,"unit_price_cents":1}]')$$,
+  '42501', 'Acesso negado.', 'quem não é admin não lança pedido manual');
 
 select * from finish();
 rollback;

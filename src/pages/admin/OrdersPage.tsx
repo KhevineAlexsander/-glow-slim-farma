@@ -1,4 +1,4 @@
-import { Search, ShieldAlert } from 'lucide-react'
+import { Plus, Search, ShieldAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { AdminPageHeader } from '../../components/admin/AdminLayout'
@@ -45,7 +45,11 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <AdminPageHeader title="Pedidos e orçamentos" />
+      <AdminPageHeader title="Pedidos e orçamentos">
+        <Link to="/admin/pedidos/novo" className="btn-primary">
+          <Plus className="size-4" aria-hidden="true" /> Novo pedido
+        </Link>
+      </AdminPageHeader>
       <div className="card mb-4 grid gap-3 p-4 sm:grid-cols-2">
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-500" />

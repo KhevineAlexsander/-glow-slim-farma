@@ -1,8 +1,9 @@
-import { ChevronLeft, MessageCircle, Minus, Pencil, Plus, Printer, Search, ShieldAlert, Trash2 } from 'lucide-react'
+import { ChevronLeft, MessageCircle, Minus, Pencil, Plus, Printer, ShieldAlert, Trash2 } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { OrderReceipt, type PaperWidth } from '../../components/admin/OrderReceipt'
 import { PriceCell } from '../../components/admin/PriceCell'
+import { ProductPicker } from '../../components/admin/ProductPicker'
 import { Badge, ErrorBox, PageLoader, Toggle } from '../../components/ui/misc'
 import { useToast } from '../../components/ui/Toast'
 import { useSettings } from '../../contexts/SettingsContext'
@@ -15,11 +16,9 @@ import {
   deleteOrder,
   deleteOrderItem,
   getOrder,
-  listProducts,
   updateOrder,
   updateOrderItem,
   type OrderPatch,
-  type ProductRow,
 } from '../../services/admin'
 import type { Order, OrderItem, OrderStatus, OrderStatusHistory } from '../../types'
 
@@ -217,56 +216,6 @@ function DeleteDialog({
   )
 }
 
-/** Busca de produto para incluir no pedido. */
-function AddItem({ onAdd }: { onAdd: (p: ProductRow) => Promise<void> }) {
-  const [term, setTerm] = useState('')
-  const [results, setResults] = useState<ProductRow[] | null>(null)
-
-  useEffect(() => {
-    const q = term.trim()
-    if (q.length < 2) {
-      setResults(null)
-      return
-    }
-    const t = setTimeout(() => {
-      listProducts({ search: q, status: 'active', page: 1, pageSize: 6 })
-        .then((r) => setResults(r.rows))
-        .catch(() => setResults([]))
-    }, 300)
-    return () => clearTimeout(t)
-  }, [term])
-
-  return (
-    <div className="mt-4 border-t border-hairline pt-4">
-      <label className="relative block">
-        <span className="sr-only">Buscar produto para incluir</span>
-        <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-body" aria-hidden="true" />
-        <input className="input pl-10" placeholder="Incluir produto: busque pelo nome ou referência" value={term} onChange={(e) => setTerm(e.target.value)} />
-      </label>
-      {results && (
-        <ul className="mt-2 divide-y divide-hairline rounded-xl border border-hairline">
-          {results.length === 0 && <li className="p-3 text-sm text-body">Nenhum produto encontrado.</li>}
-          {results.map((p) => (
-            <li key={p.id}>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between gap-3 p-3 text-left text-sm hover:bg-surface-soft"
-                onClick={() => void onAdd(p).then(() => setTerm(''))}
-              >
-                <span className="min-w-0 truncate text-ink">{p.name}</span>
-                <span className="tabular flex shrink-0 items-center gap-2 text-body">
-                  {p.price_cents > 0 ? formatBRL(p.promo_price_cents && p.promo_price_cents < p.price_cents ? p.promo_price_cents : p.price_cents) : 'sem preço'}
-                  <Plus className="size-4 text-brand-dark" aria-hidden="true" />
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
-
 export default function OrderDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
@@ -441,7 +390,7 @@ export default function OrderDetailPage() {
           <span>{order.has_unpriced_items ? 'Subtotal (itens com preço)' : 'Total'}</span>
           <span className="tabular">{formatBRL(order.total_cents)}</span>
         </div>
-        <AddItem onAdd={(p) => run(() => addOrderItem(order.id, p), `${p.name} incluído.`).then(() => undefined)} />
+        <ProductPicker onAdd={(p) => run(() => addOrderItem(order.id, p), `${p.name} incluído.`).then(() => undefined)} />
       </section>
 
       <section className="card space-y-4 p-5">

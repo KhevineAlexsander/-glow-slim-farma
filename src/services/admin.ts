@@ -5,6 +5,7 @@ import type {
   Category,
   Order,
   OrderItem,
+  OrderKind,
   OrderStatus,
   OrderStatusHistory,
   Product,
@@ -314,6 +315,16 @@ export async function updateOrder(id: string, patch: OrderPatch): Promise<Order>
   return data as Order
 }
 
+/** Lança um pedido feito fora do site. O banco grava pedido e itens juntos e devolve o id. */
+export async function createManualOrder(
+  order: { name: string; phone: string; email: string; city: string; notes: string; kind: OrderKind; status: OrderStatus },
+  items: { product_id: string; quantity: number; unit_price_cents: number | null }[],
+): Promise<string> {
+  const { data, error } = await supabase.rpc('admin_create_order', { p_order: order, p_items: items })
+  if (error) throw error
+  return data as string
+}
+
 /** Exclui o pedido (itens e histórico saem junto). O banco confere a senha de exclusão. */
 export async function deleteOrder(id: string, pin: string) {
   const { error } = await supabase.rpc('admin_delete_order', { p_order_id: id, p_pin: pin })
@@ -357,6 +368,7 @@ export async function fetchOrdersSince(since: string): Promise<OrderAlert[]> {
   const { data, error } = await supabase
     .from('orders')
     .select('id, order_number, kind, customer_name, total_cents, has_unpriced_items, created_at')
+    .eq('status', 'new') // lançamento manual já confirmado não dispara o aviso
     .gt('created_at', since)
     .order('created_at', { ascending: true })
     .limit(20)

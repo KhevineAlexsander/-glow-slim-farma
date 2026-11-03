@@ -24,6 +24,7 @@ const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'))
 const ProductsListPage = lazy(() => import('./pages/admin/ProductsListPage'))
 const ProductFormPage = lazy(() => import('./pages/admin/ProductFormPage'))
 const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'))
+const NewOrderPage = lazy(() => import('./pages/admin/NewOrderPage'))
 const BannersPage = lazy(() => import('./pages/admin/BannersPage'))
 const SettingsPage = lazy(() => import('./pages/admin/SettingsPage'))
 const MinOrderPage = lazy(() => import('./pages/admin/MinOrderPage'))
@@ -70,6 +71,7 @@ const router = createBrowserRouter([
           { path: 'categorias', element: <CategoriesPage /> },
           { path: 'banners', element: <BannersPage /> },
           { path: 'pedidos', element: <OrdersPage /> },
+          { path: 'pedidos/novo', element: <NewOrderPage /> },
           { path: 'pedidos/:id', element: <OrderDetailPage /> },
           { path: 'importar', element: <ImportPage /> },
           { path: 'pedido-minimo', element: <MinOrderPage /> },
