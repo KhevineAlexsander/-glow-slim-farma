@@ -30,6 +30,8 @@ export function OrderReceipt({
 }) {
   const title = order.kind === 'order' ? 'PEDIDO' : 'ORÇAMENTO'
   const units = items.reduce((n, i) => n + i.quantity, 0)
+  const itemsTotal = items.reduce((sum, i) => sum + (i.line_total_cents ?? 0), 0)
+  const discount = itemsTotal - order.total_cents
   return createPortal(
     <div className={`print-receipt paper-${paper}`} aria-hidden="true">
       <div className="r-center">
@@ -74,6 +76,18 @@ export function OrderReceipt({
         <span>Itens</span>
         <span>{units}</span>
       </p>
+      {discount > 0 && (
+        <>
+          <p className="r-row">
+            <span>Soma dos itens</span>
+            <span>{formatBRL(itemsTotal)}</span>
+          </p>
+          <p className="r-row">
+            <span>Desconto{order.discount_percent != null ? ` (${String(order.discount_percent).replace('.', ',')}%)` : ''}</span>
+            <span>- {formatBRL(discount)}</span>
+          </p>
+        </>
+      )}
       <p className="r-row r-big">
         <span>{order.has_unpriced_items ? 'SUBTOTAL' : 'TOTAL'}</span>
         <span>{formatBRL(order.total_cents)}</span>

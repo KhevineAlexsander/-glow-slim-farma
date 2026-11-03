@@ -118,7 +118,7 @@ export default function DashboardPage() {
                       </span>
                     </span>
                     <span className="tabular w-24 shrink-0 text-right text-sm text-ink">
-                      {o.total_cents > 0 ? formatBRL(o.total_cents) : <span className="text-muted">A cotar</span>}
+                      {o.total_cents > 0 || !o.has_unpriced_items ? formatBRL(o.total_cents) : <span className="text-muted">A cotar</span>}
                     </span>
                   </Link>
                 </li>

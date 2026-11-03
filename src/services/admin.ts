@@ -306,6 +306,8 @@ export type OrderPatch = Partial<
     | 'notes'
     | 'kind'
     | 'created_at'
+    | 'discount_cents'
+    | 'discount_percent'
   >
 >
 
@@ -317,7 +319,7 @@ export async function updateOrder(id: string, patch: OrderPatch): Promise<Order>
 
 /** Lança um pedido feito fora do site. O banco grava pedido e itens juntos e devolve o id. */
 export async function createManualOrder(
-  order: { name: string; phone: string; email: string; city: string; notes: string; kind: OrderKind; status: OrderStatus },
+  order: { name: string; phone: string; email: string; city: string; notes: string; kind: OrderKind; status: OrderStatus; discount_cents: number; discount_percent: number | null },
   items: { product_id: string; quantity: number; unit_price_cents: number | null }[],
 ): Promise<string> {
   const { data, error } = await supabase.rpc('admin_create_order', { p_order: order, p_items: items })

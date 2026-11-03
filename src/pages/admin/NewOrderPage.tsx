@@ -1,11 +1,13 @@
 import { ChevronLeft, Minus, Plus, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { OrderDiscountField } from '../../components/admin/OrderDiscountField'
 import { PriceCell } from '../../components/admin/PriceCell'
 import { ProductPicker } from '../../components/admin/ProductPicker'
 import { ErrorBox } from '../../components/ui/misc'
 import { useToast } from '../../components/ui/Toast'
 import { formatBRL } from '../../lib/money'
+import { discountAmount, NO_DISCOUNT, type OrderDiscount } from '../../lib/orderDiscount'
 import { ORDER_STATUS } from '../../lib/orderStatus'
 import { effectivePriceCents } from '../../lib/pricing'
 import { friendlyError } from '../../lib/supabase'
@@ -31,6 +33,7 @@ export default function NewOrderPage() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', city: '', notes: '' })
   const [kind, setKind] = useState<OrderKind>('order')
   const [status, setStatus] = useState<OrderStatus>('confirmed')
+  const [discount, setDiscount] = useState<OrderDiscount>(NO_DISCOUNT)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -49,7 +52,9 @@ export default function NewOrderPage() {
     })
   }
 
-  const total = lines.reduce((sum, l) => sum + (l.unitCents ?? 0) * l.quantity, 0)
+  const subtotal = lines.reduce((sum, l) => sum + (l.unitCents ?? 0) * l.quantity, 0)
+  const applied = discountAmount(subtotal, discount)
+  const total = subtotal - applied
   const hasUnpriced = lines.some((l) => l.unitCents == null)
 
   const submit = async (e: FormEvent) => {
@@ -63,7 +68,7 @@ export default function NewOrderPage() {
     setSaving(true)
     try {
       const id = await createManualOrder(
-        { ...form, name: form.name.trim(), phone, kind, status },
+        { ...form, name: form.name.trim(), phone, kind, status, ...discount },
         lines.map((l) => ({ product_id: l.productId, quantity: l.quantity, unit_price_cents: l.unitCents })),
       )
       toast(kind === 'order' ? 'Pedido criado.' : 'Orçamento criado.')
@@ -148,10 +153,11 @@ export default function NewOrderPage() {
           </ul>
         )}
         <ProductPicker onAdd={addProduct} />
+        {lines.length > 0 && <OrderDiscountField value={discount} appliedCents={applied} onChange={setDiscount} />}
         {lines.length > 0 && (
           <p className="mt-4 flex items-baseline justify-between gap-3 border-t border-hairline pt-4 text-sm text-ink">
             <span>{hasUnpriced ? 'Subtotal (itens com preço)' : 'Total'}</span>
-            <span className="tabular text-base font-semibold">{total > 0 ? formatBRL(total) : '—'}</span>
+            <span className="tabular text-base font-semibold">{total > 0 || applied > 0 ? formatBRL(total) : '—'}</span>
           </p>
         )}
       </section>

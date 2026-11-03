@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Em produção o pgTAP pode estar em outro esquema: procura nos dois.
 set local search_path to public, extensions;
-select plan(77);
+select plan(83);
 
 -- ---------------------------------------------------------------------------
 -- Dados de teste (como postgres, ignorando RLS)
@@ -277,6 +277,20 @@ select is((select user_id from public.orders where customer_name = 'Manual'), nu
 select throws_ok(
   $$select public.admin_create_order('{"name":"Vazio","phone":"11933332222"}', '[]')$$,
   '22023', 'Inclua ao menos um produto no pedido.', 'pedido manual precisa de item');
+-- Desconto: o total sai dos itens menos o desconto
+update public.orders set discount_cents = 500 where customer_name = 'Manual';
+select is((select total_cents from public.orders where customer_name = 'Manual'), 1500, 'desconto em R$ reduz o total');
+update public.orders set discount_percent = 10 where customer_name = 'Manual';
+select is((select total_cents from public.orders where customer_name = 'Manual'), 1800, 'percentual vale sobre o valor fixo');
+update public.order_items set quantity = 4
+ where unit_price_cents is not null and order_id = (select id from public.orders where customer_name = 'Manual');
+select is((select total_cents from public.orders where customer_name = 'Manual'), 3600, 'percentual acompanha a mudança nos itens');
+update public.orders set discount_percent = null, discount_cents = 99999 where customer_name = 'Manual';
+select is((select total_cents from public.orders where customer_name = 'Manual'), 0, 'desconto não passa da soma dos itens');
+select public.admin_create_order('{"name":"Com Desconto","phone":"11933332222","discount_percent":50}',
+  '[{"product_id":"20000000-0000-0000-0000-000000000001","quantity":2,"unit_price_cents":1000}]');
+select is((select total_cents from public.orders where customer_name = 'Com Desconto'), 1000, 'pedido manual já nasce com desconto');
+
 set local role anon;
 select throws_ok(
   $$select public.place_order('{"name":"Abaixo","phone":"11944443333"}',
@@ -289,6 +303,9 @@ select throws_ok(
   $$select public.admin_create_order('{"name":"Intruso","phone":"11933332222"}',
     '[{"product_id":"20000000-0000-0000-0000-000000000001","quantity":1,"unit_price_cents":1}]')$$,
   '42501', 'Acesso negado.', 'quem não é admin não lança pedido manual');
+update public.orders set discount_percent = 100 where customer_name = 'Com Desconto';
+reset role;
+select is((select total_cents from public.orders where customer_name = 'Com Desconto'), 1000, 'quem não é admin não dá desconto');
 
 select * from finish();
 rollback;

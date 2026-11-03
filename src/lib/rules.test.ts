@@ -1,3 +1,4 @@
+import { discountAmount } from './orderDiscount'
 import { describe, expect, it } from 'vitest'
 import { parseProductsCsv } from './csvImport'
 import { centsToInput, formatBRL, parseBRLToCents } from './money'
@@ -20,6 +21,15 @@ const orderMode: PricingSettings = {
   sell_restricted: false,
 }
 const quoteMode: PricingSettings = { ...orderMode, sales_mode: 'quote' }
+
+describe('desconto do pedido', () => {
+  it('valor fixo, percentual com prioridade e limite na soma', () => {
+    expect(discountAmount(10000, { discount_cents: 1500, discount_percent: null })).toBe(1500)
+    expect(discountAmount(10000, { discount_cents: 1500, discount_percent: 10 })).toBe(1000)
+    expect(discountAmount(10000, { discount_cents: 99999, discount_percent: null })).toBe(10000)
+    expect(discountAmount(1999, { discount_cents: 0, discount_percent: 12.5 })).toBe(250)
+  })
+})
 
 describe('money', () => {
   it('converte texto em centavos sem float', () => {

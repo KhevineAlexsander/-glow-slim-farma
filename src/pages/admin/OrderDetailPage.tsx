@@ -1,6 +1,7 @@
 import { ChevronLeft, MessageCircle, Minus, Pencil, Plus, Printer, ShieldAlert, Trash2 } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { OrderDiscountField } from '../../components/admin/OrderDiscountField'
 import { OrderReceipt, type PaperWidth } from '../../components/admin/OrderReceipt'
 import { PriceCell } from '../../components/admin/PriceCell'
 import { ProductPicker } from '../../components/admin/ProductPicker'
@@ -386,6 +387,13 @@ export default function OrderDetailPage() {
             </li>
           ))}
         </ul>
+        <OrderDiscountField
+          key={order.updated_at}
+          value={{ discount_cents: order.discount_cents, discount_percent: order.discount_percent }}
+          appliedCents={items.reduce((sum, i) => sum + (i.line_total_cents ?? 0), 0) - order.total_cents}
+          disabled={saving}
+          onChange={(d) => void run(() => updateOrder(order.id, d), 'Desconto atualizado.')}
+        />
         <div className="mt-3 flex justify-between border-t border-hairline pt-3 text-base font-semibold text-ink">
           <span>{order.has_unpriced_items ? 'Subtotal (itens com preço)' : 'Total'}</span>
           <span className="tabular">{formatBRL(order.total_cents)}</span>

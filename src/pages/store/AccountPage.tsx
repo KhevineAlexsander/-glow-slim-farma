@@ -9,6 +9,10 @@ import { formatDateTime, ORDER_STATUS } from '../../lib/orderStatus'
 import { onlyDigits } from '../../lib/whatsapp'
 import { fetchMyOrders, type MyOrder } from '../../services/account'
 
+function orderItemsTotal(o: MyOrder) {
+  return o.order_items.reduce((sum, i) => sum + (i.unit_price_cents ?? 0) * i.quantity, 0)
+}
+
 export default function AccountPage() {
   const { session, profile, isAdmin, loading, updateProfile, signOut } = useAuth()
   const toast = useToast()
@@ -96,7 +100,12 @@ export default function AccountPage() {
                       </li>
                     ))}
                   </ul>
-                  {o.total_cents > 0 && (
+                  {orderItemsTotal(o) > o.total_cents && (
+                    <p className="mt-2 text-right tabular text-sm text-[#247b50]">
+                      Desconto: − {formatBRL(orderItemsTotal(o) - o.total_cents)}
+                    </p>
+                  )}
+                  {(o.total_cents > 0 || orderItemsTotal(o) > 0) && (
                     <p className="mt-2 text-right tabular text-sm font-semibold text-ink">
                       {o.has_unpriced_items ? 'Subtotal' : 'Total'}: {formatBRL(o.total_cents)}
                     </p>

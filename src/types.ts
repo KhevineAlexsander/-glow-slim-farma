@@ -154,6 +154,8 @@ export interface Order {
   customer_email: string | null
   customer_city: string | null
   notes: string | null
+  discount_cents: number
+  discount_percent: number | null
   total_cents: number
   has_unpriced_items: boolean
   requires_document_review: boolean

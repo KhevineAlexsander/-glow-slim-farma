@@ -88,7 +88,7 @@ export default function OrdersPage() {
                   )}
                   <Badge tone={ORDER_STATUS[o.status].tone}>{ORDER_STATUS[o.status].label}</Badge>
                   <span className="ml-auto text-sm font-bold whitespace-nowrap text-brand-dark sm:ml-0">
-                    {o.total_cents > 0 ? formatBRL(o.total_cents) : 'A cotar'}
+                    {o.total_cents > 0 || !o.has_unpriced_items ? formatBRL(o.total_cents) : 'A cotar'}
                     {o.total_cents > 0 && o.has_unpriced_items ? ' +' : ''}
                   </span>
                 </div>
